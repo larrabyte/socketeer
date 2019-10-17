@@ -26,6 +26,7 @@ void checkret(int retcode, int ifsuccess, int ifexit, struct addrinfo *result, S
     }
 }
 
+void *safealloc(void *memory, size_t size) {
     if(memory == NULL) memory = malloc(size);
     else memory = realloc(memory, size);
 
