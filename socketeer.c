@@ -100,7 +100,33 @@ void servermain(char **argv) {
 }
 
 void clientmain(char **argv) {
-    
+    // Setup addrinfo struct for creating a socket.
+    struct addrinfo *result = NULL, hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_family = AF_UNSPEC;
+
+    // Fetch address and port information and then make a socket.
+    int retcode = getaddrinfo(argv[2], argv[3], &hints, &result);
+    checkret(retcode, 0, 0, NULL, INVALID_SOCKET);
+    SOCKET conn = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if(conn == INVALID_SOCKET) checkret(WSAGetLastError(), 0, 1, result, INVALID_SOCKET);
+    retcode = connect(conn, result->ai_addr, (int) result->ai_addrlen);
+    if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, conn);
+    printf("Remote connection established. Type :quit to quit.\n");
+
+    // Initialise buffer.
+    char *sendbuffer = (char*) safealloc(NULL, BUFFERSIZE);
+
+    // Send!
+    while(1) {
+        printf("Message: ");
+        fetchdata(stdin, sendbuffer);
+        retcode = send(conn, sendbuffer, strlen(sendbuffer) + 1, 0);
+        if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, conn);
+        printf("Sent %d bytes.\n\n", retcode);
+    }
 }
 
 int main(int argc, char **argv) {
