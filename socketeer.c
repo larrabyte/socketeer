@@ -33,7 +33,9 @@ void *safealloc(void *memory, size_t size) {
     if(memory == NULL) {
         fprintf(stderr, "Socketeer ran out of memory.\n");
         cleanexit(NULL, INVALID_SOCKET, 1);
-    } else { return memory; }
+    } 
+    
+    return memory;
 }
 
 void servermain(char **argv) {
