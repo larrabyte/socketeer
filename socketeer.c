@@ -27,7 +27,32 @@ void checkret(int retcode, int ifsuccess, int ifexit, struct addrinfo *result, S
 }
 
 void servermain(char **argv) {
+    // Setup addrinfo struct for creating a socket.
+    struct addrinfo *result = NULL, hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_family = AF_INET;
 
+    // Fetch address/port information and then create a listener.
+    int retcode = getaddrinfo(NULL, argv[2], &hints, &result);
+    checkret(retcode, 0, 0, NULL, INVALID_SOCKET);
+    SOCKET listener = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if(listener == INVALID_SOCKET) checkret(WSAGetLastError(), 0, 1, NULL, INVALID_SOCKET);
+    retcode = bind(listener, result->ai_addr, (int) result->ai_addrlen);
+    if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, listener);
+    freeaddrinfo(result);
+
+    // Listen on the listener socket.
+    retcode = listen(listener, SOMAXCONN);
+    if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, listener);
+    SOCKET clients = accept(listener, NULL, NULL);
+    if(clients == INVALID_SOCKET) checkret(WSAGetLastError(), 0, 1, NULL, clients);
+    printf("Connection accepted. Awaiting data...\n");
+
+    // Setup a memory buffer.
+    char *recvbuffer = (char*) malloc(BUFFERSIZE);
 }
 
 void clientmain(char **argv) {
