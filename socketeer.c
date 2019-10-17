@@ -26,6 +26,15 @@ void checkret(int retcode, int ifsuccess, int ifexit, struct addrinfo *result, S
     }
 }
 
+    if(memory == NULL) memory = malloc(size);
+    else memory = realloc(memory, size);
+
+    if(memory == NULL) {
+        fprintf(stderr, "Socketeer ran out of memory.\n");
+        cleanexit(NULL, INVALID_SOCKET, 1);
+    } else { return memory; }
+}
+
 void servermain(char **argv) {
     // Setup addrinfo struct for creating a socket.
     struct addrinfo *result = NULL, hints;
