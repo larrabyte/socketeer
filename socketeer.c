@@ -61,7 +61,18 @@ void servermain(char **argv) {
     printf("Connection accepted. Awaiting data...\n");
 
     // Setup a memory buffer.
-    char *recvbuffer = (char*) malloc(BUFFERSIZE);
+    char *recvbuffer = (char*) safealloc(NULL, BUFFERSIZE);
+
+    // Receive data.
+    int recvcode = 1;
+    while(recvcode > 0) {
+        recvcode = recv(clients, recvbuffer, BUFFERSIZE, 0);
+        printf("Message from client: %s\n", recvbuffer);
+    }
+
+    // Shutdown the connection.
+    if(recvcode == 0) checkret(0, 0, 1, NULL, clients);
+    else checkret(WSAGetLastError(), 0, 1, NULL, clients);
 }
 
 void clientmain(char **argv) {
