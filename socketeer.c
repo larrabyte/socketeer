@@ -26,9 +26,28 @@ void checkret(int retcode, int ifsuccess, int ifexit, struct addrinfo *result, S
     }
 }
 
+void servermain(char **argv) {
+
+}
+
+void clientmain(char **argv) {
+    
+}
+
 int main(int argc, char **argv) {
     // Winsock work?    
     WSADATA wsadata;
     int retcode = WSAStartup(MAKEWORD(2, 2), &wsadata);
     checkret(retcode, 0, 0, NULL, INVALID_SOCKET);
+    
+    if(argc == 1) {
+        printf("Arguments required. To use Socketeer in server mode:\n");
+        printf("    socketeer server [port]\n");
+        printf("To use Socketeer in client mode:\n");
+        printf("    socketeer client [address] [port]\n");
+    }
+
+    else if(strcmp(argv[1], "server") == 0) servermain(argv);
+    else if(strcmp(argv[1], "client") == 0) clientmain(argv);
+    return 0;
 }
