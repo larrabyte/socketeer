@@ -38,6 +38,27 @@ void *safealloc(void *memory, size_t size) {
     return memory;
 }
 
+void fetchdata(FILE *stream, char *dest) {
+    // Allocate a buffer and the size.
+    char *buffer = (char*) safealloc(NULL, BUFFERSIZE);
+    size_t buffersize = 4096;
+    size_t sizenow = 0;
+    int onechar;
+
+    while((onechar = fgetc(stream)) != EOF && onechar != '\n') {
+        buffer[sizenow++] = (char) onechar;
+        if(sizenow == buffersize) {
+            buffersize += BUFFERSIZE;
+            buffer = (char*) safealloc(buffer, buffersize);
+        }
+    }
+
+    // NULL terminate the buffer and copy it into dest.
+    buffer[sizenow] = '\0';
+    strcpy(dest, buffer);
+    free(buffer);
+}
+
 void servermain(char **argv) {
     // Setup addrinfo struct for creating a socket.
     struct addrinfo *result = NULL, hints;
