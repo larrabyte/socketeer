@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define BUFFERSIZE 4096
+#define BUFFERSIZE 1048576 // megabyte
 
 /* Usage of Socketeer
 socketeer server [port]
