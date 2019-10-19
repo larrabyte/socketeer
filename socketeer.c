@@ -43,23 +43,56 @@ void *safealloc(void *memory, size_t size) {
 }
 
 void *fetchdata(FILE *stream) {
-    // Allocate a buffer and the size.
+    // Allocate some buffers and cache the size.
     char *buffer = (char*) safealloc(NULL, BUFFERSIZE);
-    size_t buffersize = 4096;
+    size_t buffersize = BUFFERSIZE;
     size_t sizenow = 0;
     int onechar;
 
-    while((onechar = fgetc(stream)) != EOF && onechar != '\n') {
-        buffer[sizenow++] = (char) onechar;
-        if(sizenow == buffersize) {
-            buffersize += BUFFERSIZE;
-            buffer = (char*) safealloc(buffer, buffersize);
+    if(stream != stdin) {
+        while(!feof(stream)) {
+            sizenow += fread(buffer, sizeof(unsigned char), BUFFERSIZE, stream);
+            if(buffersize == sizenow) {
+                buffersize += BUFFERSIZE;
+                buffer = (char*) safealloc(buffer, buffersize);
+            }
+        }
+    } 
+    
+    else if(stream == stdin) {
+        while((onechar = fgetc(stream)) != EOF && onechar != '\n') {
+            buffer[sizenow++] = (char) onechar;
+            if(sizenow == buffersize) {
+                buffersize += BUFFERSIZE;
+                buffer = (char*) safealloc(buffer, buffersize);
+            }
         }
     }
 
     // NULL terminate & return buffer.
     buffer[sizenow] = '\0';
     return buffer;
+}
+
+void *parsecmd(char *msgbuffer, SOCKET sockptr) {
+    if(strcmp(msgbuffer, ":quit") == 0 || strcmp(msgbuffer, ":quit\n") == 0) checkret(0, 0, 1, NULL, sockptr);
+
+    if(strcmp(msgbuffer, ":sendfile") == 0 || strcmp(msgbuffer, ":sendfile\n") == 0) {
+        printf("Type absolute path to file.\n");
+        
+        // Get path and then try and open path.
+        char *abspath = (char*) fetchdata(stdin);
+        FILE *fstream = fopen(abspath, "rb");
+        if(fstream == NULL) checkret(69001, 0, 1, NULL, sockptr);
+        free(abspath);
+        
+        // Get binary data and return it as an unsigned char array.
+        char *msgbuffer = (char*) fetchdata(fstream);
+        fclose(fstream);
+        return msgbuffer;
+    }
+
+    return NULL;
 }
 
 void servermain(char **argv) {
@@ -119,14 +152,21 @@ void clientmain(char **argv) {
     if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, conn);
     printf("Remote connection established. Type :quit to quit.\n");
 
-    // Send!
+    // Get user input, parse and send it!
     while(1) {
         printf("Message: ");
-        char *sendbuffer = (char*) fetchdata(stdin);
-        retcode = send(conn, sendbuffer, strlen(sendbuffer) + 1, 0);
+        char *msgbuffer = (char*) fetchdata(stdin);
+        char *databuffer = (char*) parsecmd(msgbuffer, conn);
+        
+        // Send the msgbuffer if there's no data at databuffer.
+        if(databuffer == NULL) { retcode = send(conn, msgbuffer, strlen(msgbuffer) + 1, 0); }
+        else { retcode = send(conn, databuffer, strlen(databuffer) + 1, 0); }
+
+        // Check for errors, print bytes sent and free up for the next round.
         if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, conn);
         printf("Sent %d bytes.\n\n", retcode);
-        free(sendbuffer);
+        free(databuffer);
+        free(msgbuffer);
     }
 }
 
