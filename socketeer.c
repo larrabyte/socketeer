@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define BUFFERSIZE 4096
+#define TERMINALMAX 4096
 
 /* Usage of Socketeer
 socketeer server [port]
@@ -11,21 +11,11 @@ socketeer client [address] [port] */
 
 size_t datasize;
 
-void cleanexit(struct addrinfo *result, SOCKET socket, int code) {
+void exitsock(struct addrinfo *result, SOCKET socket, int code) {
     if(socket != INVALID_SOCKET) closesocket(socket);
     if(result != NULL) freeaddrinfo(result);
     WSACleanup();
     exit(code);
-}
-
-void checkret(int retcode, int ifsuccess, int ifexit, struct addrinfo *result, SOCKET socket) {
-    if(retcode != ifsuccess) {
-        fprintf(stderr, "Error: %d\n", retcode);
-        cleanexit(result, socket, 1);
-    } else if(retcode == ifsuccess && ifexit == 1) {
-        printf("Socketeer is now exiting.\n");
-        cleanexit(result, socket, 0);
-    }
 }
 
 void *safealloc(void *memory, size_t size) {
@@ -34,15 +24,15 @@ void *safealloc(void *memory, size_t size) {
 
     if(memory == NULL) {
         fprintf(stderr, "Socketeer ran out of memory.\n");
-        cleanexit(NULL, INVALID_SOCKET, 1);
-    } 
-    
+        exitsock(NULL, INVALID_SOCKET, 1);
+    }
+
     return memory;
 }
 
 void *fetchinput() {
     // Allocate some buffers and cache the size.
-    char *buffer = (char*) safealloc(NULL, BUFFERSIZE);
+    char *buffer = (char*) safealloc(NULL, TERMINALMAX);
     size_t sizenow = 0;
     int onechar;
     
@@ -55,8 +45,11 @@ void *fetchinput() {
     return buffer;
 }
 
-void *parsecmd(char *msgbuffer, SOCKET sockptr) {
-    if(strcmp(msgbuffer, ":quit") == 0 || strcmp(msgbuffer, ":quit\n") == 0) checkret(0, 0, 1, NULL, sockptr);
+void *parsecmd(char *msgbuffer, SOCKET socket) {
+    if(strcmp(msgbuffer, ":quit") == 0 || strcmp(msgbuffer, ":quit\n") == 0) {
+        printf("Exiting Socketeer.\n");
+        exitsock(NULL, socket, 0);
+    }
 
     if(strcmp(msgbuffer, ":sendfile") == 0 || strcmp(msgbuffer, ":sendfile\n") == 0) {
         printf("Type absolute path to file.\n");
@@ -64,7 +57,12 @@ void *parsecmd(char *msgbuffer, SOCKET sockptr) {
         // Get path and then try and open path.
         char *abspath = (char*) fetchinput();
         FILE *fstream = fopen(abspath, "rb");
-        if(fstream == NULL) checkret(69001, 0, 1, NULL, sockptr);
+        if(fstream == NULL) {
+            printf("Invalid path provided.\n");
+            exitsock(NULL, socket, 1);
+        }
+
+        // Free path buffer.
         free(abspath);
         
         // Get filesize and cache it.
@@ -93,33 +91,58 @@ void servermain(char **argv) {
 
     // Fetch address/port information and then create a listener.
     int retcode = getaddrinfo(NULL, argv[2], &hints, &result);
-    checkret(retcode, 0, 0, NULL, INVALID_SOCKET);
+    if(retcode != 0) {
+        printf("Socketeer failed to get address info.\n");
+        exitsock(NULL, INVALID_SOCKET, 1);
+    }
+
     SOCKET listener = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if(listener == INVALID_SOCKET) checkret(WSAGetLastError(), 0, 1, NULL, INVALID_SOCKET);
+    if(listener == INVALID_SOCKET) {
+        printf("Socketeer failed to create socket. Error %d.\n", WSAGetLastError());
+        exitsock(result, listener, 1);
+    }
+
     retcode = bind(listener, result->ai_addr, (int) result->ai_addrlen);
-    if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, listener);
+    if(retcode == SOCKET_ERROR) {
+        printf("Socketeer failed to bind socket. Error %d.\n", WSAGetLastError());
+        exitsock(result, listener, 1);
+    }
+
+    // Free address info.
     freeaddrinfo(result);
+    result = NULL;
 
     // Listen on the listener socket.
     retcode = listen(listener, SOMAXCONN);
-    if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, listener);
-    SOCKET clients = accept(listener, NULL, NULL);
-    if(clients == INVALID_SOCKET) checkret(WSAGetLastError(), 0, 1, NULL, clients);
-    printf("Connection accepted. Awaiting data...\n");
+    if(retcode == SOCKET_ERROR) {
+        printf("Socketeer failed to listen. Error %d.\n", WSAGetLastError());
+        exitsock(result, listener, 1);
+    }
 
-    // Setup a memory buffer.
-    char *recvbuffer = (char*) safealloc(NULL, BUFFERSIZE);
+    SOCKET clients = accept(listener, NULL, NULL);
+    if(clients == INVALID_SOCKET) {
+        printf("Socketeer failed to accept a connection. Error %d.\n", WSAGetLastError());
+        exitsock(result, clients, 1);
+    }
+
+    printf("Connection accepted. Awaiting data...\n");
+    char *recvbuffer = (char*) safealloc(NULL, TERMINALMAX);
 
     // Receive data.
     int recvcode = 1;
     while(recvcode > 0) {
-        recvcode = recv(clients, recvbuffer, BUFFERSIZE, 0);
+        recvcode = recv(clients, recvbuffer, TERMINALMAX, 0);
         printf("Message from client: %s\n", recvbuffer);
     }
 
     // Shutdown the connection.
-    if(recvcode == 0) checkret(0, 0, 1, NULL, clients);
-    else checkret(WSAGetLastError(), 0, 1, NULL, clients);
+    if(recvcode == 0) {
+        printf("Socketeer's connection has been closed.\n");
+        exitsock(result, clients, 0);
+    } else {
+        printf("Socketeer has encountered an error. Error %d.\n", WSAGetLastError());
+        exitsock(result, clients, 1);
+    }
 }
 
 void clientmain(char **argv) {
@@ -132,11 +155,23 @@ void clientmain(char **argv) {
 
     // Fetch address and port information and then make a socket.
     int retcode = getaddrinfo(argv[2], argv[3], &hints, &result);
-    checkret(retcode, 0, 0, NULL, INVALID_SOCKET);
+    if(retcode != 0) {
+        printf("Socketeer failed to get address info.\n");
+        exitsock(NULL, INVALID_SOCKET, 1);
+    }
+
     SOCKET conn = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if(conn == INVALID_SOCKET) checkret(WSAGetLastError(), 0, 1, result, INVALID_SOCKET);
+    if(conn == INVALID_SOCKET) {
+        printf("Socketeer failed to create socket. Error %d.\n", WSAGetLastError());
+        exitsock(result, conn, 1);
+    }
+
     retcode = connect(conn, result->ai_addr, (int) result->ai_addrlen);
-    if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, conn);
+    if(retcode == SOCKET_ERROR) {
+        printf("Socketeer failed to connect. Error %d.\n", WSAGetLastError());
+        exitsock(result, conn, 1);
+    }
+
     printf("Remote connection established. Type :quit to quit.\n");
 
     // Get user input, parse and send it!
@@ -150,7 +185,11 @@ void clientmain(char **argv) {
         else { retcode = send(conn, databuffer, datasize, 0); }
 
         // Check for errors, print bytes sent and free up for the next round.
-        if(retcode == SOCKET_ERROR) checkret(WSAGetLastError(), 0, 1, NULL, conn);
+        if(retcode == SOCKET_ERROR) {
+            printf("Socketeer did a big retard. Error %d.\n", WSAGetLastError());
+            exitsock(result, conn, 1);
+        }
+        
         printf("Sent %d bytes.\n\n", retcode);
         free(databuffer);
         free(msgbuffer);
@@ -161,7 +200,10 @@ int main(int argc, char **argv) {
     // Winsock work?    
     WSADATA wsadata;
     int retcode = WSAStartup(MAKEWORD(2, 2), &wsadata);
-    checkret(retcode, 0, 0, NULL, INVALID_SOCKET);
+    if(retcode != 0) {
+        printf("Windows Sockets failed to startup.\n");
+        exitsock(NULL, INVALID_SOCKET, 1);
+    }
     
     if(argc == 1) {
         printf("Arguments required. To use Socketeer in server mode:\n");
