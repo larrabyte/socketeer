@@ -1,5 +1,6 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -10,6 +11,11 @@ socketeer server [port]
 socketeer client [address] [port] */
 
 size_t datasize;
+
+typedef struct packet_t {
+    char data[4096];
+    bool moredata;
+} packet_t;
 
 void exitsock(struct addrinfo *result, SOCKET socket, int code) {
     if(socket != INVALID_SOCKET) closesocket(socket);
@@ -179,7 +185,7 @@ void clientmain(char **argv) {
         printf("Message: ");
         char *msgbuffer = (char*) fetchinput();
         char *databuffer = (char*) parsecmd(msgbuffer, conn);
-        
+
         // Send the msgbuffer if there's no data at databuffer.
         if(databuffer == NULL) { retcode = send(conn, msgbuffer, strlen(msgbuffer) + 1, 0); }
         else { retcode = send(conn, databuffer, datasize, 0); }
