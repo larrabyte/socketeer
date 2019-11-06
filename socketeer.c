@@ -41,12 +41,8 @@ void *fetchinput() {
     char *buffer = (char*) safealloc(NULL, TERMINALMAX);
     size_t sizenow = 0;
     int onechar;
-    
-    while((onechar = fgetc(stdin)) != EOF && onechar != '\n') {
-        buffer[sizenow++] = (char) onechar;
-    }
 
-    // NULL terminate & return buffer.
+    while((onechar = fgetc(stdin)) != EOF && onechar != '\n') buffer[sizenow++] = (char) onechar;
     buffer[sizenow] = '\0';
     return buffer;
 }
@@ -59,7 +55,7 @@ void *parsecmd(char *msgbuffer, SOCKET socket) {
 
     if(strcmp(msgbuffer, ":sendfile") == 0 || strcmp(msgbuffer, ":sendfile\n") == 0) {
         printf("Type absolute path to file.\n");
-        
+
         // Get path and then try and open path.
         char *abspath = (char*) fetchinput();
         FILE *fstream = fopen(abspath, "rb");
@@ -70,7 +66,7 @@ void *parsecmd(char *msgbuffer, SOCKET socket) {
 
         // Free path buffer.
         free(abspath);
-        
+
         // Get filesize and cache it.
         fseek(fstream, 0L, SEEK_END);
         datasize = ftell(fstream);
@@ -195,7 +191,7 @@ void clientmain(char **argv) {
             printf("Socketeer did a big retard. Error %d.\n", WSAGetLastError());
             exitsock(result, conn, 1);
         }
-        
+
         printf("Sent %d bytes.\n\n", retcode);
         free(databuffer);
         free(msgbuffer);
@@ -203,14 +199,14 @@ void clientmain(char **argv) {
 }
 
 int main(int argc, char **argv) {
-    // Winsock work?    
+    // Winsock work?
     WSADATA wsadata;
     int retcode = WSAStartup(MAKEWORD(2, 2), &wsadata);
     if(retcode != 0) {
         printf("Windows Sockets failed to startup.\n");
         exitsock(NULL, INVALID_SOCKET, 1);
     }
-    
+
     if(argc == 1) {
         printf("Arguments required. To use Socketeer in server mode:\n");
         printf("    socketeer server [port]\n");
