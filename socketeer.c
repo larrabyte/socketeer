@@ -1,4 +1,4 @@
-#include <winsock2.h>
+#include "socketeer.h"
 #include <ws2tcpip.h>
 #include <stdbool.h>
 #include <string.h>
@@ -9,24 +9,6 @@
 /* Usage of Socketeer
 socketeer server [port]
 socketeer client [address] [port] */
-
-typedef struct packet_ts {  // Struct typedef for a Socketeer packet.
-    unsigned char *data;
-    size_t length;
-} packet_ts;
-
-typedef struct setupdata_ts {  // Struct typedef for passing setup data.
-    struct addrinfo *result;
-    SOCKET socketeer;
-} setupdata_ts;
-
-// Function declarations so that main() doesn't complain.
-void exitsock(struct addrinfo *result, SOCKET socket, int code);
-setupdata_ts commoninit(char **argv, int type);
-void *safealloc(void *memory, size_t size);
-SOCKET serverinit(setupdata_ts sockinfo);
-void clientinit(setupdata_ts sockinfo);
-void fetchinput(char *buffer);
 
 int main(int argc, char **argv) {
     WSADATA wsadata; // Does Windows Sockets work?
