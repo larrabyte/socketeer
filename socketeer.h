@@ -7,8 +7,8 @@
 #define TERMINALMAX 4096   // Maximum characters inside a terminal.
 
 typedef struct packet_ts {  // Struct typedef for a Socketeer packet.
-    unsigned char *data;
     size_t length;
+    char *data;
 } packet_ts;
 
 typedef struct setupdata_ts {  // Struct typedef for passing setup data.
