@@ -31,8 +31,9 @@ int main(int argc, char **argv) {
         printf("Connection established with client.\n");
 
         while(numbytes > 0) {
-            numbytes = recv(clients, recvbuf, TERMINALMAX, 0);
-            printf("Message: %s\n", recvbuf);
+            memset(recvbuf, 0, TERMINALMAX);                    // Clear buffer data.
+            numbytes = recv(clients, recvbuf, TERMINALMAX, 0);  // Move data into recv buffer.
+            printf("Message: %s\n", recvbuf);                   // Print data to terminal.
         }
 
         if(numbytes == 0) {
@@ -50,6 +51,7 @@ int main(int argc, char **argv) {
         clientinit(setupdata);                   // Initialise client.
 
         char sendbuf[TERMINALMAX];               // Setup send buffer.
+        fileattr_ts file;                        // Declare fileattr_ts struct.
         int numbytes;                            // Number of bytes sent.
 
         printf("Connection established with server.\n");
@@ -57,7 +59,16 @@ int main(int argc, char **argv) {
         while(true) {
             printf("Message: ");
             fetchinput(sendbuf);
-            numbytes = send(conn, sendbuf, strlen(sendbuf) + 1, 0);
+
+            if(strcmp(sendbuf, ":sendfile") == 0 || strcmp(sendbuf, ":sendfile\n") == 0) {  // Do we want to send a file?
+                printf("Type absolute path to file.\n");
+                char *abspath = (char*) safealloc(NULL, TERMINALMAX);
+                fetchinput(abspath);  // Write path into abspath buffer.
+
+                file = readfile(abspath);
+                numbytes = send(conn, file.data, file.size, 0);
+            } else numbytes = send(conn, sendbuf, strlen(sendbuf) + 1, 0);
+
             if(numbytes == SOCKET_ERROR) {
                 fprintf(stderr, "Something went wrong with Socketeer, code %d.\n", WSAGetLastError());
                 exitsock(setupdata.result, conn, 1);

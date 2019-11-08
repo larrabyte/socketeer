@@ -22,6 +22,7 @@ setupdata_ts commoninit(char **argv, int type);
 void *safealloc(void *memory, size_t size);
 SOCKET serverinit(setupdata_ts sockinfo);
 void clientinit(setupdata_ts sockinfo);
+fileattr_ts readfile(char *abspath);
 void fetchinput(char *buffer);
 
 setupdata_ts commoninit(char **argv, int type) {
