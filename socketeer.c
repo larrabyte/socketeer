@@ -45,16 +45,12 @@ int main(int argc, char **argv) {
     }
 
     else if(strcmp(argv[1], "client") == 0) {
-        setupdata = commoninit(argv, 1);        // Setup a standard socket.
-        SOCKET conn = setupdata.socketeer;      // Prepare for later on.
-        clientinit(setupdata);                  // Initialise client.
-        int numbytes;
+        setupdata = commoninit(argv, 1);         // Setup a standard socket.
+        SOCKET conn = setupdata.socketeer;       // Set conn to the setup socket.
+        clientinit(setupdata);                   // Initialise client.
 
-        char *sendbuf = (char*) safealloc(NULL, TERMINALMAX);
-        if(sendbuf == NULL) {
-            fprintf(stderr, "Socketeer failed to allocate a send buffer.\n");
-            exitsock(setupdata.result, conn, 1);
-        }
+        char sendbuf[TERMINALMAX];               // Setup send buffer.
+        int numbytes;                            // Number of bytes sent.
 
         printf("Connection established with server.\n");
 
