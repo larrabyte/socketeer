@@ -6,15 +6,15 @@
 
 #define TERMINALMAX 4096   // Maximum characters inside a terminal.
 
-typedef struct packet_ts {  // Struct typedef for a Socketeer packet.
-    size_t length;
-    char *data;
-} packet_ts;
-
 typedef struct setupdata_ts {  // Struct typedef for passing setup data.
     struct addrinfo *result;
     SOCKET socketeer;
 } setupdata_ts;
+
+typedef struct fileattr_ts {  // Struct typedef for passing a file and its attributes.
+    size_t size;
+    char *data;
+} fileattr_ts;
 
 // Function definitions.
 void exitsock(struct addrinfo *result, SOCKET socket, int code);
@@ -78,6 +78,24 @@ SOCKET serverinit(setupdata_ts sockinfo) {
     }
 
     return clients; // Return the connected socket.
+}
+
+fileattr_ts readfile(char *abspath) {
+    FILE *fstream = fopen(abspath, "rb");
+    if(fstream == NULL) {
+        fprintf(stderr, "Invalid path provided.\n");
+        exitsock(NULL, INVALID_SOCKET, 1);
+    }
+
+    fileattr_ts filetoret;
+    fseek(fstream, 0L, SEEK_END);
+    filetoret.size = ftell(fstream);
+    fseek(fstream, 0L, 0);
+    
+    filetoret.data = (char*) safealloc(NULL, filetoret.size);
+    fread(filetoret.data, 1, filetoret.size, fstream);
+    fclose(fstream);
+    return filetoret;
 }
 
 void clientinit(setupdata_ts sockinfo) {
