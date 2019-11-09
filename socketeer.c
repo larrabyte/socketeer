@@ -33,8 +33,11 @@ int main(int argc, char **argv) {
 
         while(numbytes > 0) {
             numbytes = recv(clients, (char*) &recvdatasize, sizeof(size_t), 0);
-            if(numbytes != sizeof(size_t)) fprintf(stderr, "Socketeer failed to receive buffer size.\n");
-            else {
+            
+            if(numbytes != sizeof(size_t)) {
+                fprintf(stderr, "Socketeer failed to receive buffer size.\n");
+                exitsock(setupdata.result, clients, 1);
+            } else {
                 recvbuf = (char*) safealloc(NULL, recvdatasize);
                 numbytes = recv(clients, recvbuf, recvdatasize, 0);
             }
@@ -77,12 +80,13 @@ int main(int argc, char **argv) {
                 if(numbytes != sizeof(size_t)) fprintf(stderr, "Socketeer failed to send buffer size.\n");
                 else numbytes = send(conn, file.data, file.size, 0);
                 free(file.data);
-
             } else {
                 size_t bufsize = strlen(termbuf) + 1;
                 numbytes = send(conn, (char*) &bufsize, sizeof(size_t), 0);
-                if(numbytes != sizeof(size_t)) fprintf(stderr, "Socketeer failed to send buffer size.\n");
-                else numbytes = send(conn, termbuf, bufsize, 0);
+                if(numbytes != sizeof(size_t)) {
+                    fprintf(stderr, "Socketeer failed to send buffer size.\n");
+                    exitsock(setupdata.result, conn, 1);
+                } else numbytes = send(conn, termbuf, bufsize, 0);
             }
 
             if(numbytes == SOCKET_ERROR) {
