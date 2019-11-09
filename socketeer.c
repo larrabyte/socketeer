@@ -84,7 +84,9 @@ int main(int argc, char **argv) {
                 } else numbytes = send(conn, file.data, file.size, 0);          // Send actual data (char*)
 
                 free(file.data);
-            } else {
+            }
+            
+            else {
                 size_t bufsize = strlen(termbuf) + 1;
                 numbytes = send(conn, (char*) &bufsize, sizeof(size_t), 0);     // Send 8 bytes (size_t)
                 if(numbytes != sizeof(size_t)) {
