@@ -32,14 +32,14 @@ int main(int argc, char **argv) {
         char *recvbuf;
 
         while(numbytes > 0) {
-            numbytes = recv(clients, (char*) &recvdatasize, sizeof(size_t), 0);
+            numbytes = recv(clients, (char*) &recvdatasize, sizeof(size_t), 0);  // Receive 8 bytes and write into a size_t
             
             if(numbytes != sizeof(size_t)) {
                 fprintf(stderr, "Socketeer failed to receive buffer size.\n");
                 exitsock(setupdata.result, clients, 1);
             } else {
-                recvbuf = (char*) safealloc(NULL, recvdatasize);
-                numbytes = recv(clients, recvbuf, recvdatasize, 0);
+                recvbuf = (char*) safealloc(NULL, recvdatasize);     // Allocate a buffer, size of received size_t
+                numbytes = recv(clients, recvbuf, recvdatasize, 0);  // Write data into said buffer.
             }
 
             printf("Message: %s\n", recvbuf);
@@ -76,21 +76,21 @@ int main(int argc, char **argv) {
                 fetchinput(abspath);
 
                 fileattr_ts file = readfile(abspath);
-                numbytes = send(conn, (char*) &file.size, sizeof(size_t), 0);
+                numbytes = send(conn, (char*) &file.size, sizeof(size_t), 0);    // Send 8 bytes (size_t)
                 
                 if(numbytes != sizeof(size_t)) {
                     fprintf(stderr, "Socketeer failed to send buffer size.\n");
                     exitsock(setupdata.result, conn, 1);
-                } else numbytes = send(conn, file.data, file.size, 0);
-                
+                } else numbytes = send(conn, file.data, file.size, 0);          // Send actual data (char*)
+
                 free(file.data);
             } else {
                 size_t bufsize = strlen(termbuf) + 1;
-                numbytes = send(conn, (char*) &bufsize, sizeof(size_t), 0);
+                numbytes = send(conn, (char*) &bufsize, sizeof(size_t), 0);     // Send 8 bytes (size_t)
                 if(numbytes != sizeof(size_t)) {
                     fprintf(stderr, "Socketeer failed to send buffer size.\n");
                     exitsock(setupdata.result, conn, 1);
-                } else numbytes = send(conn, termbuf, bufsize, 0);
+                } else numbytes = send(conn, termbuf, bufsize, 0);              // Send actual data (char*)
             }
 
             if(numbytes == SOCKET_ERROR) {
