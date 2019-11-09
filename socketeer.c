@@ -62,14 +62,14 @@ int main(int argc, char **argv) {
             // Commands.
             if(strcmp(sendbuf, ":sendfile") == 0 || strcmp(sendbuf, ":sendfile\n") == 0) {
                 printf("Type absolute path to file.\n");
-                char *abspath = (char*) safealloc(NULL, TERMINALMAX);       // Create buffer for filepath.
-                fetchinput(abspath);                                        // Write path into abspath buffer.
+                char *abspath = (char*) safealloc(NULL, TERMINALMAX);
+                fetchinput(abspath);
 
-                fileattr_ts file = readfile(abspath);                       // Fetch file data pointer and size.
-                numbytes = send(conn, file.data, file.size, 0);             // Send data down the network.
-                free(file.data);                                            // Free the file data array.
-                free(abspath);                                              // Free filepath buffer.             
-            } else numbytes = send(conn, sendbuf, strlen(sendbuf) + 1, 0);  // If no command, send message buffer instead.
+                fileattr_ts file = readfile(abspath);             // Fetch file data pointer and size.
+                numbytes = send(conn, file.data, file.size, 0);   // Send data down the network.
+                free(file.data);                                  // Free the file data array.
+                free(abspath);                                    // Free filepath buffer.             
+            } else numbytes = send(conn, sendbuf, strlen(sendbuf) + 1, 0);
 
             if(numbytes == SOCKET_ERROR) {
                 fprintf(stderr, "Something went wrong with Socketeer, code %d.\n", WSAGetLastError());
