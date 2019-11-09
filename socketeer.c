@@ -77,8 +77,12 @@ int main(int argc, char **argv) {
 
                 fileattr_ts file = readfile(abspath);
                 numbytes = send(conn, (char*) &file.size, sizeof(size_t), 0);
-                if(numbytes != sizeof(size_t)) fprintf(stderr, "Socketeer failed to send buffer size.\n");
-                else numbytes = send(conn, file.data, file.size, 0);
+                
+                if(numbytes != sizeof(size_t)) {
+                    fprintf(stderr, "Socketeer failed to send buffer size.\n");
+                    exitsock(setupdata.result, conn, 1);
+                } else numbytes = send(conn, file.data, file.size, 0);
+                
                 free(file.data);
             } else {
                 size_t bufsize = strlen(termbuf) + 1;
