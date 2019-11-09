@@ -25,15 +25,22 @@ int main(int argc, char **argv) {
     else if(strcmp(argv[1], "server") == 0) {
         setupdata = commoninit(argv, 0);         // Setup a standard socket.
         SOCKET clients = serverinit(setupdata);  // Initialise server.
-        char recvbuf[TERMINALMAX];               // Setup a recv buffer.
         int numbytes = 1;
 
         printf("Connection established with client.\n");
+        size_t recvdatasize;
+        char *recvbuf;
 
         while(numbytes > 0) {
-            memset(recvbuf, 0, TERMINALMAX);                    // Clear buffer data.
-            numbytes = recv(clients, recvbuf, TERMINALMAX, 0);  // Move data into recv buffer.
-            printf("Message: %s\n", recvbuf);                   // Print data to terminal.
+            numbytes = recv(clients, (char*) &recvdatasize, sizeof(size_t), 0);
+            if(numbytes != sizeof(size_t)) fprintf(stderr, "Socketeer failed to receive buffer size.\n");
+            else {
+                recvbuf = (char*) safealloc(NULL, recvdatasize);
+                numbytes = recv(clients, recvbuf, recvdatasize, 0);
+            }
+
+            printf("Message: %s\n", recvbuf);
+            free(recvbuf);
         }
 
         if(numbytes == 0) {
@@ -50,26 +57,33 @@ int main(int argc, char **argv) {
         SOCKET conn = setupdata.socketeer;       // Set conn to the setup socket.
         clientinit(setupdata);                   // Initialise client.
 
-        char sendbuf[TERMINALMAX];               // Setup send buffer.
+        char termbuf[TERMINALMAX];               // Setup terminal buffer.
         int numbytes;                            // Number of bytes sent.
 
         printf("Connection established with server.\n");
 
         while(true) {
             printf("Message: ");
-            fetchinput(sendbuf);
+            fetchinput(termbuf);
 
             // Commands.
-            if(strcmp(sendbuf, ":sendfile") == 0 || strcmp(sendbuf, ":sendfile\n") == 0) {
+            if(strcmp(termbuf, ":sendfile") == 0 || strcmp(termbuf, ":sendfile\n") == 0) {
                 printf("Type absolute path to file.\n");
-                char *abspath = (char*) safealloc(NULL, TERMINALMAX);
+                char abspath[TERMINALMAX];
                 fetchinput(abspath);
 
-                fileattr_ts file = readfile(abspath);             // Fetch file data pointer and size.
-                numbytes = send(conn, file.data, file.size, 0);   // Send data down the network.
-                free(file.data);                                  // Free the file data array.
-                free(abspath);                                    // Free filepath buffer.             
-            } else numbytes = send(conn, sendbuf, strlen(sendbuf) + 1, 0);
+                fileattr_ts file = readfile(abspath);
+                numbytes = send(conn, (char*) &file.size, sizeof(size_t), 0);
+                if(numbytes != sizeof(size_t)) fprintf(stderr, "Socketeer failed to send buffer size.\n");
+                else numbytes = send(conn, file.data, file.size, 0);
+                free(file.data);
+
+            } else {
+                size_t bufsize = strlen(termbuf) + 1;
+                numbytes = send(conn, (char*) &bufsize, sizeof(size_t), 0);
+                if(numbytes != sizeof(size_t)) fprintf(stderr, "Socketeer failed to send buffer size.\n");
+                else numbytes = send(conn, termbuf, bufsize, 0);
+            }
 
             if(numbytes == SOCKET_ERROR) {
                 fprintf(stderr, "Something went wrong with Socketeer, code %d.\n", WSAGetLastError());
