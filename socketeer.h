@@ -2,6 +2,8 @@
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 #define TERMINALMAX 4096   // Maximum characters inside a terminal.
@@ -24,6 +26,94 @@ SOCKET serverinit(setupdata_ts sockinfo);
 void clientinit(setupdata_ts sockinfo);
 fileattr_ts readfile(char *abspath);
 void fetchinput(char *buffer);
+void *recvthread(void *args);
+void *sendthread(void *args);
+
+void *sendthread(void *args) {
+    char **argv = (char**) args;
+    setupdata_ts setup = commoninit(argv, 1);  // Setup a standard socket.
+    SOCKET conn = setup.socketeer;             // Set conn to the setup socket.
+    clientinit(setup);                         // Initialise client.
+
+    char termbuf[TERMINALMAX];                 // Setup terminal buffer.
+    int numbytes;                              // Number of bytes sent.
+
+    printf("Connection established with server.\n");
+
+    while(true) {
+        printf("Message: ");
+        fetchinput(termbuf);
+
+        // Commands.
+        if(strcmp(termbuf, ":sendfile") == 0 || strcmp(termbuf, ":sendfile\n") == 0) {
+            printf("Type absolute path to file.\n");
+            char abspath[TERMINALMAX];
+            fetchinput(abspath);
+
+            fileattr_ts file = readfile(abspath);
+            numbytes = send(conn, (char*) &file.size, sizeof(size_t), 0);    // Send 8 bytes (size_t)
+                
+            if(numbytes != sizeof(size_t)) {
+                fprintf(stderr, "Socketeer failed to send buffer size.\n");
+                exitsock(setup.result, conn, 1);
+            } else numbytes = send(conn, file.data, file.size, 0);          // Send actual data (char*)
+
+            free(file.data);
+        }
+            
+        else {
+            size_t bufsize = strlen(termbuf) + 1;
+            numbytes = send(conn, (char*) &bufsize, sizeof(size_t), 0);     // Send 8 bytes (size_t)
+            if(numbytes != sizeof(size_t)) {
+                fprintf(stderr, "Socketeer failed to send buffer size.\n");
+                exitsock(setup.result, conn, 1);
+            } else numbytes = send(conn, termbuf, bufsize, 0);              // Send actual data (char*)
+        }
+
+        if(numbytes == SOCKET_ERROR) {
+            fprintf(stderr, "Something went wrong with Socketeer, code %d.\n", WSAGetLastError());
+            exitsock(setup.result, conn, 1);
+        }
+
+        printf("Sent %d bytes.\n\n", numbytes);
+    }
+}
+
+void *recvthread(void *args) {
+    char **argv = (char**) args;
+    setupdata_ts setup = commoninit(argv, 0);
+    SOCKET clients = serverinit(setup);
+
+    printf("Connection established with client.\n");
+    size_t buffersize;
+    int numbytes = 1;
+    char *bufferptr;
+
+    while(numbytes > 0) {
+        numbytes = recv(clients, (char*) &buffersize, sizeof(size_t), 0);
+
+        if(numbytes != sizeof(size_t)) {
+            fprintf(stderr, "Socketeer failed to receive buffer size.\n");
+            exitsock(setup.result, clients, 1);
+        } else {
+            bufferptr = (char*) safealloc(NULL, buffersize);
+            numbytes = recv(clients, bufferptr, buffersize, 0);
+        }
+
+        printf("Message: %s\n", bufferptr);
+        free(bufferptr);
+    }
+
+    if(numbytes == 0) {
+        printf("Socketeer's connection has been closed.\n");
+        exitsock(setup.result, clients, 0);
+    } else {
+        fprintf(stderr, "Socketeer has encountered an error, code %d.\n", WSAGetLastError());
+        exitsock(setup.result, clients, 1);
+    }
+
+    return NULL;
+}
 
 setupdata_ts commoninit(char **argv, int type) {
     struct addrinfo *result = NULL, hints;
