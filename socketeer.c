@@ -1,18 +1,13 @@
 #include "socketeer.h"
-#include <string.h>
-
-/* Usage of Socketeer
-socketeer server [port]
-socketeer client [address] [port] */
+#include "client.h"
+#include "server.h"
 
 int main(int argc, char **argv) {
-    WSADATA wsadata; // Does Windows Sockets work?
-    int retc = WSAStartup(MAKEWORD(2, 2), &wsadata);
-
-    if(retc != 0) {
-        fprintf(stderr, "Windows Sockets failed to startup.\n");
-        exitsock(NULL, INVALID_SOCKET, 1);
-    }
+    #ifdef _WIN32
+        WSADATA wsadata;
+        int retcode = WSAStartup(MAKEWORD(2, 2), &wsadata);
+        if(retcode != 0) exitsock("Windows Sockets failed to startup.\n", -1);
+    #endif
 
     if(argc == 1) { // If no arguments have been passed in.
         printf("Arguments required. To use Socketeer in server mode:\n");
@@ -22,16 +17,21 @@ int main(int argc, char **argv) {
     }
 
     else if(strcmp(argv[1], "server") == 0) {
-        pthread_t tidserver;
-        pthread_create(&tidserver, NULL, recvthread, (void*) argv);
-        pthread_join(tidserver, NULL);
+        SOCKET socket = commoninit(argv, SERVERMODE);
+        socket = serverinit(socket);
+
+        printf("Connection established.\n");
+        recvthread((void*) &socket);
     }
 
     else if(strcmp(argv[1], "client") == 0) {
-        pthread_t tidclient;
-        pthread_create(&tidclient, NULL, sendthread, (void*) argv);
-        pthread_join(tidclient, NULL);
+        SOCKET csocket = commoninit(argv, CLIENTMODE);
+        clientinit(csocket);
+
+        printf("Connection established.\n");
+        sendthread((void*) &csocket);
     }
 
+    fprintf(stderr, "Invalid arguments.\n");
     return 0;
 }
