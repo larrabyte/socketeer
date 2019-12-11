@@ -1,6 +1,6 @@
-#include "socketeer.h"
-#include "client.h"
-#include "server.h"
+#include "headers/socketeer.h"
+#include "headers/client.h"
+#include "headers/server.h"
 
 int main(int argc, char **argv) {
     #ifdef _WIN32
