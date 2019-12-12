@@ -29,7 +29,11 @@ void recvthread(void *args) {
                 fclose(fstream);
             }
 
-            printf("Data has been written to file.raw (%I64d bytes.)\n", numbytes);
+            #ifdef _WIN32
+                printf("Data has been written to file.raw (%I64d bytes.)\n", numbytes);
+            #else 
+                printf("Data has been written to file.raw (%I64ld bytes.)\n", numbytes);
+            #endif
         }
 
         free(databuffer);
