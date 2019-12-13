@@ -2,7 +2,6 @@
 
 #include "socketeer.h"
 #include <inttypes.h>
-#include <stdbool.h>
 
 // Performs data receiving functions.
 void recvthread(void *args) { 
@@ -13,11 +12,11 @@ void recvthread(void *args) {
 
     while(numbytes > 0) {
         numbytes = sockrecv(*socket, &header, sizeof(header), 0);
-        if(sentbytes != sizeof(header)) exitsock("Socketeer failed to send header data.\n", lasterror());
+        if(numbytes != sizeof(header)) exitsock("Socketeer failed to receive header data.\n", lasterror());
 
         databuffer = (char*) safealloc(NULL, header.size);
         numbytes = sockrecv(*socket, databuffer, header.size, MSG_WAITALL);
-        if(sentbytes != header.size) exitsock("Socketeer failed to send data.\n", lasterror());
+        if(numbytes != header.size) exitsock("Socketeer failed to receive data.\n", lasterror());
 
         if(header.type == TEXT) printf("Remote: %s\n", databuffer);
 
@@ -29,11 +28,7 @@ void recvthread(void *args) {
                 fclose(fstream);
             }
 
-            #ifdef _WIN32
-                printf("Data has been written to file.raw (%I64d bytes.)\n", numbytes);
-            #else 
-                printf("Data has been written to file.raw (%I64ld bytes.)\n", numbytes);
-            #endif
+            printf("Data has been written to file.raw (%" PRId64 "bytes.)\n", numbytes);
         }
 
         free(databuffer);

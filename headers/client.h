@@ -1,7 +1,6 @@
 #pragma once
 
 #include "socketeer.h"
-#include <stdbool.h>
 
 ssize_t sentbytes;
 
@@ -49,7 +48,7 @@ void sendthread(void *args) {
     char termbuf[TERMINALMAX];
     struct header header;
 
-    while(true) {
+    while(1) {
         printf("Message: ");
         fgets(termbuf, TERMINALMAX, stdin);
         termbuf[strcspn(termbuf, "\n")] = '\0';
@@ -62,7 +61,7 @@ void sendthread(void *args) {
             sentbytes = socksend(*socket, &header, sizeof(header), 0);
             if(sentbytes != sizeof(header)) exitsock("Socketeer failed to send header data.\n", lasterror());
 
-            socksend(*socket, termbuf, header.size, 0);
+            sentbytes = socksend(*socket, termbuf, header.size, 0);
             if(sentbytes != header.size) exitsock("Socketeer failed to send data.\n", lasterror());
         }
     }

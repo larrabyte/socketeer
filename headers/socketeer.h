@@ -7,12 +7,6 @@
 #include <stdio.h>
 
 #ifdef _WIN32
-    #ifdef __USE_MINGW_ANSI_STDIO  // GCC complains if mingw_ansi_stdio is already defined.
-    #undef __USE_MINGW_ANSI_STDIO  // This line undefines it for the statements below.
-    #endif                         // Endif.
-
-    #define __USE_MINGW_ANSI_STDIO 1  // Stops gcc complaining about %llu or %lld.
-
     #include <winsock2.h>
     #include <ws2tcpip.h>
 
