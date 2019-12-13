@@ -22,7 +22,7 @@ int interpretcmd(SOCKET *socket, struct header *header, char *userinput) {
                 sentbytes = socksend(*socket, header, sizeof(*header), 0);
                 if(sentbytes != sizeof(*header)) exitsock("Socketeer failed to send header data.\n", lasterror());
 
-                socksend(*socket, file.data, header->size, 0);
+                sentbytes = socksend(*socket, file.data, header->size, 0);
                 if(sentbytes != header->size) exitsock("Socketeer failed to send data.\n", lasterror());
 
                 free(file.data);
