@@ -10,8 +10,11 @@ void recvthread(void *args) {
     ssize_t numbytes = 1;
     char *databuffer;
 
-    while(numbytes > 0) {
+    printf("Connection established.\n");
+
+    while(1) {
         numbytes = sockrecv(*socket, &header, sizeof(header), 0);
+        if(numbytes == 0) exitsock("Connection has been closed by remote end.\n", 0);
         if(numbytes != sizeof(header)) exitsock("Socketeer failed to receive header data.\n", lasterror());
 
         databuffer = (char*) safealloc(NULL, header.size);
@@ -28,12 +31,9 @@ void recvthread(void *args) {
                 fclose(fstream);
             }
 
-            printf("Data has been written to file.raw (%" PRId64 "bytes.)\n", numbytes);
+            printf("Data has been written to file.raw (%" PRId64 " bytes.)\n", numbytes);
         }
 
         free(databuffer);
     }
-
-    if(numbytes == 0) exitsock("Connection has been closed by remote end.\n", 0);
-    else exitsock("Socketeer encounted an error with the connection.\n", lasterror());
 }

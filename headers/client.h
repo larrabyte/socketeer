@@ -48,6 +48,8 @@ void sendthread(void *args) {
     char termbuf[TERMINALMAX];
     struct header header;
 
+    printf("Connection established.\n");
+
     while(1) {
         printf("Message: ");
         fgets(termbuf, TERMINALMAX, stdin);
