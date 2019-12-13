@@ -4,22 +4,22 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-void recvthread(void *args) {
-    // Performs data receiving functions.
-
+// Performs data receiving functions.
+void recvthread(void *args) { 
     SOCKET *socket = (SOCKET*) args;
+    struct header header;
     ssize_t numbytes = 1;
-    header_ts header;
     char *databuffer;
 
-    while(true) {
-        numbytes = posixrecv(*socket, (void*) &header, sizeof(header), 0, HEADERS);
-        if(numbytes == 0LL) exitsock("Connection has been closed by remote end.\n", 0);
+    while(numbytes > 0) {
+        numbytes = sockrecv(*socket, &header, sizeof(header), 0);
+        if(sentbytes != sizeof(header)) exitsock("Socketeer failed to send header data.\n", lasterror());
 
         databuffer = (char*) safealloc(NULL, header.size);
-        numbytes = posixrecv(*socket, (void*) databuffer, header.size, MSG_WAITALL, 0);
+        numbytes = sockrecv(*socket, databuffer, header.size, MSG_WAITALL);
+        if(sentbytes != header.size) exitsock("Socketeer failed to send data.\n", lasterror());
 
-        if(header.type == MESSAGE) printf("Remote: %s\n", databuffer);
+        if(header.type == TEXT) printf("Remote: %s\n", databuffer);
 
         else if(header.type == RAWDATA) {
             FILE *fstream = fopen("file.raw", "wb");
@@ -38,4 +38,7 @@ void recvthread(void *args) {
 
         free(databuffer);
     }
+
+    if(numbytes == 0) exitsock("Connection has been closed by remote end.\n", 0);
+    else exitsock("Socketeer encounted an error with the connection.\n", lasterror());
 }

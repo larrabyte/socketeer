@@ -1,11 +1,6 @@
 #pragma once
 
 #define TERMINALMAX 4096
-#define SERVERMODE 0
-#define CLIENTMODE 1
-#define MESSAGE 0
-#define RAWDATA 1
-#define HEADERS 2
 
 #include <string.h>
 #include <stdint.h>
@@ -49,16 +44,17 @@
 #endif
 
 enum socktype { UNINITIALISED, TCPSERVER, TCPCLIENT, UDPRECVER, UDPCASTER };
+enum datatype { TEXT, RAWDATA, HEADERDATA };
 
-typedef struct header_ts {
+struct header {
+    enum datatype type;
     uint64_t size;
-    uint8_t type;
-} header_ts;
+};
 
-typedef struct file_ts {
+struct fileattr {
     size_t size;
     char *data;
-} file_ts;
+};
 
 // Prints message to standard error and exits with error.
 void exitsock(const char *message, int error) {
@@ -118,62 +114,32 @@ SOCKET tcpsocketinit(char **argv, enum socktype stype) {
     return sockfd;
 }
 
-// Runs appropriate send() depending on OS.
-ssize_t posixsend(SOCKET socket, void *buffer, size_t length, int flags, int datatype) {
-    ssize_t bytes;
-
+// Runs send() with appropriate arguments, depending on OS.
+ssize_t socksend(SOCKET socket, void *buffer, size_t length, int flags) {
     #ifdef _WIN32
-        bytes = (ssize_t) send(socket, (char*) buffer, (int) length, flags);
+        return send(socket, (char*) buffer, (int) length, flags);
     #else
-        bytes = send((int) socket, buffer, length, flags);
+        return send(socket, buffer, length, flags);
     #endif
-
-    if(bytes != (ssize_t) length) {
-        switch(datatype) {
-            case HEADERS:
-                exitsock("Socketeer failed to send header data.\n", -1);
-                break;
-            default:
-                exitsock("Socketeer failed to send data.\n", -1);
-                break;
-        }
-    }
-
-    return bytes;
 }
 
-// Runs appropriate recv() depending on OS.
-ssize_t posixrecv(SOCKET socket, void *buffer, size_t length, int flags, int datatype) {
-    ssize_t bytes;
-
+// Runs recv() with appropriate arguments, depending on OS.
+ssize_t sockrecv(SOCKET socket, void *buffer, size_t length, int flags) {
     #ifdef _WIN32
-        bytes = (ssize_t) recv(socket, (char*) buffer, (int) length, flags);
+        return recv(socket, (char*) buffer, (int) length, flags);
     #else
-        bytes = recv((int) socket, buffer, length, flags);
+        return recv(socket, buffer, length, flags);
     #endif
-
-    if(bytes != (ssize_t) length && bytes > 0LL) {
-        switch(datatype) {
-            case HEADERS:
-                exitsock("Socketeer failed to receive header data.\n", -1);
-                break;
-            default:
-                exitsock("Socketeer failed to receive data.\n", -1);
-                break;
-        }
-    }
-
-    return bytes;
 }
 
 // Returns a struct with file size and pointer to data.
-file_ts readfile(char *filepath) {
+struct fileattr readfile(char *filepath) {
     FILE *fstream = fopen(filepath, "rb");
-    if(fstream == NULL) return (file_ts) {0, NULL};
+    if(fstream == NULL) return (struct fileattr) {0, NULL};
 
-    file_ts file;
+    struct fileattr file;
     fseek(fstream, 0L, SEEK_END);
-    file.size = (size_t) ftell(fstream);
+    file.size = ftell(fstream);
     fseek(fstream, 0L, 0);
 
     file.data = (char*) safealloc(NULL, file.size);

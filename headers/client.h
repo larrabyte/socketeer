@@ -3,23 +3,29 @@
 #include "socketeer.h"
 #include <stdbool.h>
 
-int interpretcmd(SOCKET *socket, header_ts *header, char *userinput) {
-    // Interprets user input for commands.
+ssize_t sentbytes;
 
+// Interprets user input. Requires pointers to socket and header struct.
+// This is because this function can send data based on interpreted commands.
+int interpretcmd(SOCKET *socket, struct header *header, char *userinput) {
     if(userinput[0] == ':') {
         if(strcmp(userinput, ":sendfile") == 0 || strcmp(userinput, ":sendfile\n") == 0) {
             printf("Type path to file.\n");
             fgets(userinput, TERMINALMAX, stdin);
             userinput[strcspn(userinput, "\n")] = '\0';
 
-            file_ts file = readfile(userinput);
+            struct fileattr file = readfile(userinput);
             if(file.data == NULL) fprintf(stderr, "Invalid path provided.\n\n");
             else {
                 header->size = file.size;
                 header->type = RAWDATA;
 
-                posixsend(*socket, (void*) header, sizeof(*header), 0, HEADERS);
-                posixsend(*socket, (void*) file.data, header->size, 0, 0);
+                sentbytes = socksend(*socket, header, sizeof(*header), 0);
+                if(sentbytes != sizeof(*header)) exitsock("Socketeer failed to send header data.\n", lasterror());
+
+                socksend(*socket, file.data, header->size, 0);
+                if(sentbytes != header->size) exitsock("Socketeer failed to send data.\n", lasterror());
+
                 free(file.data);
             }
         }
@@ -41,7 +47,7 @@ void sendthread(void *args) {
 
     SOCKET *socket = (SOCKET*) args;
     char termbuf[TERMINALMAX];
-    header_ts header;
+    struct header header;
 
     while(true) {
         printf("Message: ");
@@ -49,12 +55,15 @@ void sendthread(void *args) {
         termbuf[strcspn(termbuf, "\n")] = '\0';
 
         int iscmd = interpretcmd(socket, &header, termbuf);
-        if(iscmd == 0) {
+        if(!iscmd) {
             header.size = strlen(termbuf) + 1;
-            header.type = MESSAGE;
+            header.type = TEXT;
 
-            posixsend(*socket, (void*) &header, sizeof(header), 0, HEADERS);
-            posixsend(*socket, (void*) termbuf, header.size, 0, 0);
+            sentbytes = socksend(*socket, &header, sizeof(header), 0);
+            if(sentbytes != sizeof(header)) exitsock("Socketeer failed to send header data.\n", lasterror());
+
+            socksend(*socket, termbuf, header.size, 0);
+            if(sentbytes != header.size) exitsock("Socketeer failed to send data.\n", lasterror());
         }
     }
 }
