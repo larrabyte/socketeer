@@ -25,7 +25,7 @@ int interpretcmd(SOCKET *socket, header_ts *header, char *userinput) {
         }
 
         else if(strcmp(userinput, ":quit") == 0 || strcmp(userinput, ":quit\n") == 0) {
-            socketdestruct(*socket);
+            closesocket(*socket);
             exitsock("Socketeer now exiting.\n", 0);
         }
 

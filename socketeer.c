@@ -9,6 +9,8 @@ int main(int argc, char **argv) {
         if(retcode != 0) exitsock("Windows Sockets failed to startup.\n", -1);
     #endif
 
+    SOCKET sockfd;
+
     if(argc == 1) { // If no arguments have been passed in.
         printf("Arguments required. To use Socketeer in server mode:\n");
         printf("    socketeer server [port]\n");
@@ -17,19 +19,13 @@ int main(int argc, char **argv) {
     }
 
     else if(strcmp(argv[1], "server") == 0) {
-        SOCKET socket = commoninit(argv, SERVERMODE);
-        socket = serverinit(socket);
-
-        printf("Connection established.\n");
-        recvthread((void*) &socket);
+        sockfd = tcpsocketinit(argv, TCPSERVER);
+        recvthread(&sockfd);
     }
 
     else if(strcmp(argv[1], "client") == 0) {
-        SOCKET csocket = commoninit(argv, CLIENTMODE);
-        clientinit(csocket);
-
-        printf("Connection established.\n");
-        sendthread((void*) &csocket);
+        sockfd = tcpsocketinit(argv, TCPCLIENT);
+        sendthread(&sockfd);
     }
 
     fprintf(stderr, "Invalid arguments.\n");
