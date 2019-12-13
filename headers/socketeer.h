@@ -12,11 +12,11 @@
 #include <stdio.h>
 
 #ifdef _WIN32
-    #ifdef __USE_MINGW_ANSI_STDIO      // GCC complains if mingw_ansi_stdio is already defined.
-        #undef __USE_MINGW_ANSI_STDIO  // This line undefines it for the statements below.
-    #endif                             // Endif.
+    #ifdef __USE_MINGW_ANSI_STDIO  // GCC complains if mingw_ansi_stdio is already defined.
+    #undef __USE_MINGW_ANSI_STDIO  // This line undefines it for the statements below.
+    #endif                         // Endif.
 
-    #define __USE_MINGW_ANSI_STDIO 1    // Stops gcc complaining about %llu or %lld.
+    #define __USE_MINGW_ANSI_STDIO 1  // Stops gcc complaining about %llu or %lld.
 
     #include <winsock2.h>
     #include <ws2tcpip.h>
@@ -29,11 +29,11 @@
     #define INVALID_SOCKET -1
     #define SOCKET_ERROR -1
 
-    #ifdef __USE_XOPEN2K      // GCC complains if xopen2k is already defined.
-        #undef __USE_XOPEN2K  // This line undefines it for the statements below.
-    #endif                    // Endif.
+    #ifdef __USE_XOPEN2K  // GCC complains if xopen2k is already defined.
+    #undef __USE_XOPEN2K  // This line undefines it for the statements below.
+    #endif                // Endif.
 
-    #define __USE_XOPEN2K   // Stops Visual Studio Code complaining about incomplete types.
+    #define __USE_XOPEN2K  // Stops Visual Studio Code complaining about incomplete types.
 
     #include <sys/socket.h>
     #include <stdlib.h>
