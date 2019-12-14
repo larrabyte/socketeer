@@ -4,6 +4,7 @@
 #include "sockutils.h"
 #include "sockets.h"
 #include <inttypes.h>
+#include <string.h>
 #include <stdio.h>
 
 ssize_t sentbytes;

@@ -27,6 +27,7 @@
 
     #include <sys/socket.h>
     #include <stdlib.h>
+    #include <string.h>
     #include <unistd.h>
     #include <errno.h>
     #include <netdb.h>
@@ -39,7 +40,7 @@
     }
 
     // Calls the OS' version of sleep().
-    void socksleep(unsigned int seconds) {
+    unsigned int socksleep(unsigned int seconds) {
         return sleep(seconds);
     }
 #endif
