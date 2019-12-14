@@ -1,6 +1,5 @@
 #include "headers/sockets.h"
-#include "headers/server.h"
-#include "headers/client.h"
+#include "headers/tcp.h"
 
 int main(int argc, char **argv) {
     #ifdef _WIN32
@@ -18,7 +17,6 @@ int main(int argc, char **argv) {
     #endif
 
     SOCKET sockfd;
-    int portno;
 
     if(argc == 1) { // If no arguments have been passed in.
         printf("Arguments required. To use Socketeer in server mode:\n");
