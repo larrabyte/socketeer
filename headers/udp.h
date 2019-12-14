@@ -1,8 +1,42 @@
 #pragma once
 
 #include "posixcompat.h"
+#include "terminal.h"
 #include "sockets.h"
 #include <inttypes.h>
+
+struct listnode {
+    struct castinfo remote;
+    struct listnode *next;
+};
+
+struct listnode *sptr = NULL;  // Start pointer of the received casts list.
+
+// Traverses and prints each member of the cast list.
+void printcastlist() {
+    struct listnode *local = sptr;
+    unsigned char counter = 0;
+
+    clearterm();
+    printf("Broadcast list:\n\n");
+
+    while(local->next != NULL) {
+        printf("%.2u) %s:%hu\n", counter++, local->remote.hostname, local->remote.portno);
+        local = local->next;
+    }
+}
+
+// Adds recvdata to the list of received broadcasts.
+// Assumes that this is a brand new member.
+void addtolist(struct castinfo recvdata) {
+    struct listnode *local = sptr;
+
+    while(local->next != NULL) local = local->next;  // Traverse the linked list.
+    memcpy(local, &recvdata, sizeof(recvdata));      // Copy recvdata into a new member.
+
+    local->next = (struct listnode*) safealloc(NULL, sizeof(struct listnode));
+    memset(local->next, 0, sizeof(struct listnode));
+}
 
 // Performs data sending functions using the UDP protocol.
 void sendonudp(void *args) {
@@ -36,10 +70,14 @@ void recvonudp(void *args) {
     socklen_t clilen = sizeof(clientaddr);
     struct castinfo data;
 
+    // Initialising received broadcast list.
+    sptr = (struct listnode*) safealloc(NULL, sizeof(struct listnode));
+    memset(sptr, 0, sizeof(struct listnode));
     printf("Awaiting broadcast...\n");
 
     while(1) {
         recvfrom(*socket, (char*) &data, sizeof(data), 0, (struct sockaddr*) &clientaddr, &clilen);
-        printf("Broadcast from %s:%" PRIu16 " (version %" PRIu64 ")\n", data.hostname, data.portno, data.version);
+        addtolist(data);
+        printcastlist();
     }
 }
