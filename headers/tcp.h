@@ -46,18 +46,6 @@ int interpretcmd(SOCKET *socket, struct header *header, char *userinput) {
     return 0;
 }
 
-// Performs data sending functions using the UDP protocol.
-void sendonudp(void *args) {
-    SOCKET *socket = (SOCKET*) args;
-    struct castinfo castdata = {1, "192.168.0.96"};
-    printf("Broadcasting...\n");
-
-    while(1) {
-        sentbytes = sendto(*socket, (char*) &castdata, sizeof(castdata), 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
-        socksleep(1);
-    }
-}
-
 // Performs data sending functions using the TCP protocol.
 void sendontcp(void *args) {
     SOCKET *socket = (SOCKET*) args;

@@ -12,8 +12,9 @@ enum datatype { TEXT, RAWDATA, HEADERDATA };
 struct sockaddr_in serveraddr, clientaddr;
 
 struct castinfo {
-    uint64_t version;
     char hostname[16];
+    uint16_t portno;
+    uint64_t version;
 };
 
 struct header {

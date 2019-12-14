@@ -1,5 +1,6 @@
 #include "headers/sockets.h"
 #include "headers/tcp.h"
+#include "headers/udp.h"
 
 int main(int argc, char **argv) {
     #ifdef _WIN32
@@ -25,20 +26,36 @@ int main(int argc, char **argv) {
         printf("    socketeer client [address] [port]\n");
     }
 
-    else if(argc == 3 && strcmp(argv[1], "server") == 0) {
-        // argv[0]      argv[1]   argv[2]
-        // socketeer    server    1047
+    else if(argc == 3 && strcmp(argv[1], "tcpserver") == 0) {
+        // argv[0]      argv[1]      argv[2]
+        // socketeer    tcpserver    1047
 
         sockfd = tcpsocketinit(NULL, argv[2], TCPSERVER);
         recvontcp(&sockfd);
     }
 
-    else if(argc == 4 && strcmp(argv[1], "client") == 0) {
-        // argv[0]      argv[1]   argv[2]      argv[3]
-        // socketeer    client    127.0.0.1    1047
+    else if(argc == 4 && strcmp(argv[1], "tcpclient") == 0) {
+        // argv[0]      argv[1]      argv[2]      argv[3]
+        // socketeer    tcpclient    127.0.0.1    1047
 
         sockfd = tcpsocketinit(argv[2], argv[3], TCPCLIENT);
         sendontcp(&sockfd);
+    }
+
+    else if(argc == 3 && strcmp(argv[1], "udpcaster") == 0) {
+        // argv[0]      argv[1]      argv[2]
+        // socketeer    udpcaster    1047
+
+        sockfd = udpsocketinit(atoi(argv[2]), UDPCASTER);
+        sendonudp(&sockfd);
+    }
+
+    else if(argc == 3 && strcmp(argv[1], "udprecver") == 0) {
+        // argv[0]      argv[1]      argv[2]
+        // socketeer    udprecver    1047
+
+        sockfd = udpsocketinit(atoi(argv[2]), UDPRECVER);
+        recvonudp(&sockfd);
     }
 
     fprintf(stderr, "Invalid arguments.\n");
