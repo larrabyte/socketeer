@@ -18,11 +18,11 @@ void sendonudp(void *args) {
         struct in_addr address = {0};
 
         memcpy(&address, host->h_addr_list[0], sizeof(struct in_addr));
-        printf("Address: %s\n", inet_ntoa(address));
+        strncpy(data.hostname, inet_ntoa(address), sizeof(data.hostname));
     }
 
-    data.version = CASTVERSION;
-    data.portno = 1047;
+    data.version = CASTVERSION;  // Should be 1.
+    data.portno = 50647;         // some random number.
 
     while(1) {
         sendto(*socket, (char*) &data, sizeof(data), 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
