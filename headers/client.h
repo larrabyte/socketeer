@@ -1,7 +1,6 @@
 #pragma once
 
 #include "socketeer.h"
-#include <winbase.h>
 
 ssize_t sentbytes;
 
@@ -49,7 +48,7 @@ void sendonudp(void *args) {
 
     while(1) {
         sentbytes = sendto(*socket, (char*) &castdata, sizeof(castdata), 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
-        Sleep(1000);
+        socksleep(1);
     }
 }
 
