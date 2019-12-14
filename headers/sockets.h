@@ -4,23 +4,8 @@
 #include "sockutils.h"
 #include <stdint.h>
 
-#define TERMINALMAX 4096
-#define CASTVERSION 1
-
 enum socktype { UNINITIALISED, TCPSERVER, TCPCLIENT, UDPRECVER, UDPCASTER };
-enum datatype { TEXT, RAWDATA, HEADERDATA };
 struct sockaddr_in serveraddr, clientaddr;
-
-struct castinfo {
-    char hostname[16];
-    uint16_t portno;
-    uint64_t version;
-};
-
-struct header {
-    enum datatype type;
-    uint64_t size;
-};
 
 // Returns a ready-to-use UDP socket based on socktype passed in.
 SOCKET udpsocketinit(int portno, enum socktype stype) {

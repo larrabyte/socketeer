@@ -2,10 +2,18 @@
 
 #include "posixcompat.h"
 #include "sockutils.h"
-#include "sockets.h"
 #include <inttypes.h>
 #include <string.h>
 #include <stdio.h>
+
+#define TERMINALMAX 4096
+
+enum datatype { TEXT, RAWDATA, HEADERDATA };
+
+struct header {
+    enum datatype type;
+    uint64_t size;
+};
 
 ssize_t sentbytes;
 

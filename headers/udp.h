@@ -2,8 +2,15 @@
 
 #include "posixcompat.h"
 #include "terminal.h"
-#include "sockets.h"
 #include <inttypes.h>
+
+#define CASTVERSION 1
+
+struct castinfo {
+    char hostname[16];
+    uint16_t portno;
+    uint64_t version;
+};
 
 struct listnode {
     struct castinfo remote;
