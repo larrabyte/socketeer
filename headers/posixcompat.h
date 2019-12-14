@@ -28,6 +28,7 @@
     #define __USE_XOPEN2K  // Stops Visual Studio Code complaining about incomplete types.
 
     #include <sys/socket.h>
+    #include <arpa/inet.h>
     #include <stdlib.h>
     #include <string.h>
     #include <unistd.h>

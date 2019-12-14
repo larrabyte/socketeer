@@ -1,13 +1,28 @@
 #pragma once
 
+#include "posixcompat.h"
 #include "sockets.h"
 #include <inttypes.h>
 
 // Performs data sending functions using the UDP protocol.
 void sendonudp(void *args) {
     SOCKET *socket = (SOCKET*) args;
-    struct castinfo data = {"192.168.0.96", 1047, 1};
     printf("Broadcasting...\n");
+    struct castinfo data;
+    char hostname[128];
+
+    int retcode = gethostname(hostname, 128);
+    if(retcode == SOCKET_ERROR) strcpy(data.hostname, "0.0.0.0");
+    else {
+        struct hostent *host = gethostbyname(hostname);
+        struct in_addr address = {0};
+
+        memcpy(&address, host->h_addr_list[0], sizeof(struct in_addr));
+        printf("Address: %s\n", inet_ntoa(address));
+    }
+
+    data.version = CASTVERSION;
+    data.portno = 1047;
 
     while(1) {
         sendto(*socket, (char*) &data, sizeof(data), 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
