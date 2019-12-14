@@ -30,7 +30,12 @@ SOCKET udpsocketinit(int portno, enum socktype stype) {
     SOCKET sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if(sockfd == INVALID_SOCKET) exitsock("Socketeer failed to create a socket.\n", lasterror());
 
-    char castperms = '1';
+    #ifdef _WIN32
+        char castperms = '1';
+    #else
+        socklen_t castperms = '1';
+    #endif
+
     retcode = setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &castperms, sizeof(castperms));
     if(retcode == SOCKET_ERROR) exitsock("Socketeer failed to set socket broadcast options.\n", lasterror());
 

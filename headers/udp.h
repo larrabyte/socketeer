@@ -18,7 +18,7 @@ void sendonudp(void *args) {
 // Performs data receiving functions using the UDP protocol.
 void recvonudp(void *args) {
     SOCKET *socket = (SOCKET*) args;
-    int clilen = sizeof(clientaddr);
+    socklen_t clilen = sizeof(clientaddr);
     struct castinfo data;
 
     printf("Awaiting broadcast...\n");

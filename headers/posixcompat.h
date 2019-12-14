@@ -5,6 +5,8 @@
     #include <ws2tcpip.h>
     #include <winbase.h>
 
+    typedef int socklen_t;
+
     // Calls WSAGetLastError().
     int lasterror(void) {
         return WSAGetLastError();
