@@ -1,6 +1,7 @@
 #pragma once
 
 #include "socketeer.h"
+#include <winbase.h>
 
 ssize_t sentbytes;
 
@@ -41,9 +42,19 @@ int interpretcmd(SOCKET *socket, struct header *header, char *userinput) {
     return 0;
 }
 
-void sendthread(void *args) {
-    // Performs data sending functions.
+void sendonudp(void *args) {
+    SOCKET *socket = (SOCKET*) args;
+    struct castinfo castdata = {1, "192.168.0.96"};
+    printf("Broadcasting...\n");
 
+    while(1) {
+        sentbytes = sendto(*socket, (char*) &castdata, sizeof(castdata), 0, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
+        Sleep(1000);
+    }
+}
+
+// Performs data sending functions using the TCP protocol.
+void sendontcp(void *args) {
     SOCKET *socket = (SOCKET*) args;
     char termbuf[TERMINALMAX];
     struct header header;

@@ -19,13 +19,19 @@ int main(int argc, char **argv) {
     }
 
     else if(strcmp(argv[1], "server") == 0) {
+        // sockfd = udpsocketinit(argv, UDPRECVER);
+        // recvonudp(&sockfd);
+
         sockfd = tcpsocketinit(argv, TCPSERVER);
-        recvthread(&sockfd);
+        recvontcp(&sockfd);
     }
 
     else if(strcmp(argv[1], "client") == 0) {
+        // sockfd = udpsocketinit(argv, UDPCASTER);
+        // sendonudp(&sockfd);
+
         sockfd = tcpsocketinit(argv, TCPCLIENT);
-        sendthread(&sockfd);
+        sendontcp(&sockfd);
     }
 
     fprintf(stderr, "Invalid arguments.\n");

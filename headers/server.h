@@ -3,11 +3,25 @@
 #include "socketeer.h"
 #include <inttypes.h>
 
-// Performs data receiving functions.
-void recvthread(void *args) { 
+ssize_t numbytes;
+
+void recvonudp(void *args) {
+    SOCKET *socket = (SOCKET*) args;
+    int clilen = sizeof(clientaddr);
+    struct castinfo castdata;
+
+    printf("Awaiting broadcast...\n");
+
+    while(1) {
+        numbytes = recvfrom(*socket, (char*) &castdata, sizeof(castdata), 0, (struct sockaddr*) &clientaddr, &clilen);
+        printf("\nBroadcast received! Version %" PRIu64 ", hostname: %s\n", castdata.version, castdata.hostname);
+    }
+}
+
+// Performs data receiving functions using the TCP protocol.
+void recvontcp(void *args) { 
     SOCKET *socket = (SOCKET*) args;
     struct header header;
-    ssize_t numbytes = 1;
     char *databuffer;
 
     printf("Connection established.\n");

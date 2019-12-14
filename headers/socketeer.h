@@ -39,6 +39,12 @@
 
 enum socktype { UNINITIALISED, TCPSERVER, TCPCLIENT, UDPRECVER, UDPCASTER };
 enum datatype { TEXT, RAWDATA, HEADERDATA };
+struct sockaddr_in serveraddr, clientaddr;
+
+struct castinfo {
+    uint64_t version;
+    char hostname[16];
+};
 
 struct header {
     enum datatype type;
@@ -66,7 +72,35 @@ void *safealloc(void *memory, size_t size) {
     return memory;
 }
 
-// Returns a ready-to-use TCP socket based on socktype passed in and address/portno.
+// Returns a ready-to-use UDP socket based on socktype passed in.
+SOCKET udpsocketinit(char **argv, enum socktype stype) {
+    if(stype == TCPSERVER || stype == TCPCLIENT) return (SOCKET) ~0;
+    #define UDP_TESTPORT 1049
+    int retcode;
+
+    SOCKET sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if(sockfd == INVALID_SOCKET) exitsock("Socketeer failed to create a socket.\n", lasterror());
+
+    char castperms = '1';
+    retcode = setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &castperms, sizeof(castperms));
+    if(retcode == SOCKET_ERROR) exitsock("Socketeer failed to set socket broadcast options.\n", lasterror());
+
+    memset(&serveraddr, 0, sizeof(serveraddr));
+    serveraddr.sin_port = htons(UDP_TESTPORT);
+    serveraddr.sin_family = AF_INET;
+
+    if(stype == UDPRECVER) {
+        serveraddr.sin_addr.s_addr = INADDR_ANY;
+        retcode = bind(sockfd, (struct sockaddr*) &serveraddr, sizeof(serveraddr));
+        if(retcode == SOCKET_ERROR) exitsock("Socketeer failed to bind a socket.\n", lasterror());
+    } else {
+        serveraddr.sin_addr.s_addr = INADDR_BROADCAST;
+    }
+
+    return sockfd;
+}
+
+// Returns a ready-to-use TCP socket based on socktype passed in.
 SOCKET tcpsocketinit(char **argv, enum socktype stype) {
     if(stype == UDPCASTER || stype == UDPRECVER) return (SOCKET) ~0;
 
