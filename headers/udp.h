@@ -10,7 +10,24 @@ struct listnode {
     struct listnode *next;
 };
 
+enum retcodes { ADDTOLIST, DONTADDTOLIST };
+
 struct listnode *sptr = NULL;  // Start pointer of the received casts list.
+
+// Checks recvdata against the cast list.
+int checkcastlist(struct castinfo recvdata) {
+    if(recvdata.version != CASTVERSION) return DONTADDTOLIST;
+    struct listnode *local = sptr;
+    int addrsame, portsame;
+
+    while(local->next != NULL) {
+        addrsame = !strcmp(recvdata.hostname, local->remote.hostname);
+        portsame = (recvdata.portno == local->remote.portno);
+        if(addrsame && portsame) return DONTADDTOLIST;
+    }
+
+    return ADDTOLIST;
+}
 
 // Traverses and prints each member of the cast list.
 void printcastlist() {
@@ -77,7 +94,7 @@ void recvonudp(void *args) {
 
     while(1) {
         recvfrom(*socket, (char*) &data, sizeof(data), 0, (struct sockaddr*) &clientaddr, &clilen);
-        addtolist(data);
+        if(checkcastlist(data) == ADDTOLIST) addtolist(data);
         printcastlist();
     }
 }
