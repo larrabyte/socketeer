@@ -73,9 +73,8 @@ void *safealloc(void *memory, size_t size) {
 }
 
 // Returns a ready-to-use UDP socket based on socktype passed in.
-SOCKET udpsocketinit(char **argv, enum socktype stype) {
+SOCKET udpsocketinit(int portno, enum socktype stype) {
     if(stype == TCPSERVER || stype == TCPCLIENT) return (SOCKET) ~0;
-    #define UDP_TESTPORT 1049
     int retcode;
 
     SOCKET sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -86,7 +85,7 @@ SOCKET udpsocketinit(char **argv, enum socktype stype) {
     if(retcode == SOCKET_ERROR) exitsock("Socketeer failed to set socket broadcast options.\n", lasterror());
 
     memset(&serveraddr, 0, sizeof(serveraddr));
-    serveraddr.sin_port = htons(UDP_TESTPORT);
+    serveraddr.sin_port = htons(portno);
     serveraddr.sin_family = AF_INET;
 
     if(stype == UDPRECVER) {
@@ -101,7 +100,7 @@ SOCKET udpsocketinit(char **argv, enum socktype stype) {
 }
 
 // Returns a ready-to-use TCP socket based on socktype passed in.
-SOCKET tcpsocketinit(char **argv, enum socktype stype) {
+SOCKET tcpsocketinit(const char *address, const char *portstr, enum socktype stype) {
     if(stype == UDPCASTER || stype == UDPRECVER) return (SOCKET) ~0;
 
     struct addrinfo *result = NULL, hints;
@@ -113,12 +112,11 @@ SOCKET tcpsocketinit(char **argv, enum socktype stype) {
     if(stype == TCPSERVER) {
         hints.ai_flags = AI_PASSIVE;
         hints.ai_family = AF_INET;
-        retcode = getaddrinfo(NULL, argv[2], &hints, &result);
     } else if(stype == TCPCLIENT) {
         hints.ai_family = AF_UNSPEC;
-        retcode = getaddrinfo(argv[2], argv[3], &hints, &result);
     }
 
+    retcode = getaddrinfo(address, portstr, &hints, &result);
     if(retcode != 0) exitsock("Socketeer failed to get address info.\n", -1);
     SOCKET sockfd = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if(sockfd == INVALID_SOCKET) exitsock("Socketeer failed to create a socket.\n", lasterror());

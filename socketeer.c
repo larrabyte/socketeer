@@ -10,6 +10,7 @@ int main(int argc, char **argv) {
     #endif
 
     SOCKET sockfd;
+    int portno;
 
     if(argc == 1) { // If no arguments have been passed in.
         printf("Arguments required. To use Socketeer in server mode:\n");
@@ -18,19 +19,19 @@ int main(int argc, char **argv) {
         printf("    socketeer client [address] [port]\n");
     }
 
-    else if(strcmp(argv[1], "server") == 0) {
-        // sockfd = udpsocketinit(argv, UDPRECVER);
-        // recvonudp(&sockfd);
+    else if(argc == 3 && strcmp(argv[1], "server") == 0) {
+        // argv[0]      argv[1]   argv[2]
+        // socketeer    server    1047
 
-        sockfd = tcpsocketinit(argv, TCPSERVER);
+        sockfd = tcpsocketinit(NULL, argv[2], TCPSERVER);
         recvontcp(&sockfd);
     }
 
-    else if(strcmp(argv[1], "client") == 0) {
-        // sockfd = udpsocketinit(argv, UDPCASTER);
-        // sendonudp(&sockfd);
+    else if(argc == 4 && strcmp(argv[1], "client") == 0) {
+        // argv[0]      argv[1]   argv[2]      argv[3]
+        // socketeer    client    127.0.0.1    1047
 
-        sockfd = tcpsocketinit(argv, TCPCLIENT);
+        sockfd = tcpsocketinit(argv[2], argv[3], TCPCLIENT);
         sendontcp(&sockfd);
     }
 
