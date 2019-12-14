@@ -1,12 +1,11 @@
 #pragma once
 
+#include "posixcompat.h"
+#include "sockutils.h"
+#include <stdint.h>
+
 #define TERMINALMAX 4096
 #define CASTVERSION 1
-
-#include "posixcompat.h"
-#include <string.h>
-#include <stdint.h>
-#include <stdio.h>
 
 enum socktype { UNINITIALISED, TCPSERVER, TCPCLIENT, UDPRECVER, UDPCASTER };
 enum datatype { TEXT, RAWDATA, HEADERDATA };
@@ -21,27 +20,6 @@ struct header {
     enum datatype type;
     uint64_t size;
 };
-
-struct fileattr {
-    size_t size;
-    char *data;
-};
-
-// Prints message to standard error and exits with error.
-void exitsock(const char *message, int error) {
-    fprintf(stderr, message);
-    if(error != 0) fprintf(stderr, "Error code: %d\n", error);
-    exit(-1);
-}
-
-// Performs malloc/realloc while also checking the resulting pointers.
-void *safealloc(void *memory, size_t size) {
-    if(memory == NULL) memory = malloc(size);
-    else memory = realloc(memory, size);
-    if(memory == NULL) exitsock("Socketeer encountered a memory issue.\n", 0);
-
-    return memory;
-}
 
 // Returns a ready-to-use UDP socket based on socktype passed in.
 SOCKET udpsocketinit(int portno, enum socktype stype) {
@@ -111,36 +89,3 @@ SOCKET tcpsocketinit(const char *address, const char *portstr, enum socktype sty
     return sockfd;
 }
 
-// Runs send() with appropriate arguments, depending on OS.
-ssize_t socksend(SOCKET socket, void *buffer, size_t length, int flags) {
-    #ifdef _WIN32
-        return send(socket, (char*) buffer, (int) length, flags);
-    #else
-        return send(socket, buffer, length, flags);
-    #endif
-}
-
-// Runs recv() with appropriate arguments, depending on OS.
-ssize_t sockrecv(SOCKET socket, void *buffer, size_t length, int flags) {
-    #ifdef _WIN32
-        return recv(socket, (char*) buffer, (int) length, flags);
-    #else
-        return recv(socket, buffer, length, flags);
-    #endif
-}
-
-// Returns a struct with file size and pointer to data.
-struct fileattr readfile(char *filepath) {
-    FILE *fstream = fopen(filepath, "rb");
-    if(fstream == NULL) return (struct fileattr) {0, NULL};
-
-    struct fileattr file;
-    fseek(fstream, 0L, SEEK_END);
-    file.size = ftell(fstream);
-    fseek(fstream, 0L, 0);
-
-    file.data = (char*) safealloc(NULL, file.size);
-    fread(file.data, 1, file.size, fstream);
-    fclose(fstream);
-    return file;
-}

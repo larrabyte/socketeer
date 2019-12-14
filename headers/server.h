@@ -1,6 +1,6 @@
 #pragma once
 
-#include "socketeer.h"
+#include "posixcompat.h"
 #include <inttypes.h>
 
 // Performs data receiving functions using the TCP protocol.

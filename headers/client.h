@@ -1,6 +1,6 @@
 #pragma once
 
-#include "socketeer.h"
+#include "sockutils.h"
 
 ssize_t sentbytes;
 
@@ -41,6 +41,7 @@ int interpretcmd(SOCKET *socket, struct header *header, char *userinput) {
     return 0;
 }
 
+// Performs data sending functions using the UDP protocol.
 void sendonudp(void *args) {
     SOCKET *socket = (SOCKET*) args;
     struct castinfo castdata = {1, "192.168.0.96"};

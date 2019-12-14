@@ -1,6 +1,6 @@
 #pragma once
 
-#include "socketeer.h"
+#include "sockets.h"
 #include <inttypes.h>
 
 typedef struct listnode {
@@ -12,6 +12,7 @@ void printlist(listnode_ts *startptr) {
     
 }
 
+// Performs data receiving functions using the UDP protocol.
 void recvonudp(void *args) {
     SOCKET *socket = (SOCKET*) args;
     int clilen = sizeof(clientaddr);
