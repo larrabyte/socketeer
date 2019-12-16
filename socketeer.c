@@ -20,10 +20,14 @@ int main(int argc, char **argv) {
     SOCKET sockfd;
 
     if(argc == 1) { // If no arguments have been passed in.
-        printf("Arguments required. To use Socketeer in server mode:\n");
-        printf("    socketeer server [port]\n");
-        printf("To use Socketeer in client mode:\n");
-        printf("    socketeer client [address] [port]\n");
+        printf("Arguments required. To use Socketeer in TCP server mode:\n");
+        printf("    %s tcpserver [port]\n", argv[0]);
+        printf("To use Socketeer in TCP client mode:\n");
+        printf("    %s tcpclient [address] [port]\n\n", argv[0]);
+        printf("To use Socketeer in UDP server mode:\n");
+        printf("    %s udpcaster [port]\n", argv[0]);
+        printf("To use Socketeer in UDP client mode:\n");
+        printf("    %s udprecver [port]\n", argv[0]);
     }
 
     else if(argc == 3 && strcmp(argv[1], "tcpserver") == 0) {
