@@ -36,7 +36,7 @@ int interpretcmd(SOCKET *socket, struct header *header, char *userinput) {
                 if(sentbytes != sizeof(*header)) exitsock("Socketeer failed to send header data.\n", lasterror());
 
                 sentbytes = socksend(*socket, file.data, header->size, 0);
-                if(sentbytes != header->size) exitsock("Socketeer failed to send data.\n", lasterror());
+                if((uint64_t) sentbytes != header->size) exitsock("Socketeer failed to send data.\n", lasterror());
 
                 free(file.data);
             }
@@ -76,7 +76,7 @@ void sendontcp(void *args) {
             if(sentbytes != sizeof(header)) exitsock("Socketeer failed to send header data.\n", lasterror());
 
             sentbytes = socksend(*socket, termbuf, header.size, 0);
-            if(sentbytes != header.size) exitsock("Socketeer failed to send data.\n", lasterror());
+            if((uint64_t) sentbytes != header.size) exitsock("Socketeer failed to send data.\n", lasterror());
         }
     }
 }
@@ -97,7 +97,7 @@ void recvontcp(void *args) {
 
         databuffer = (char*) safealloc(NULL, header.size);
         numbytes = sockrecv(*socket, databuffer, header.size, MSG_WAITALL);
-        if(numbytes != header.size) exitsock("Socketeer failed to receive data.\n", lasterror());
+        if((uint64_t) numbytes != header.size) exitsock("Socketeer failed to receive data.\n", lasterror());
 
         if(header.type == TEXT) printf("Remote: %s\n", databuffer);
 
