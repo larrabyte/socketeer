@@ -31,6 +31,7 @@ int checkcastlist(struct castinfo recvdata) {
         addrsame = !strcmp(recvdata.hostname, local->remote.hostname);
         portsame = (recvdata.portno == local->remote.portno);
         if(addrsame && portsame) return DONTADDTOLIST;
+        local = local->next;
     }
 
     return ADDTOLIST;
