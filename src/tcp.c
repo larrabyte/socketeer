@@ -1,19 +1,7 @@
-#pragma once
-
-#include "posixcompat.h"
-#include "sockutils.h"
-#include <inttypes.h>
+#include "head/sockutils.h"
+#include "head/tcp.h"
 #include <string.h>
 #include <stdio.h>
-
-#define TERMINALMAX 4096
-
-enum datatype { TEXT, RAWDATA, HEADERDATA };
-
-struct header {
-    enum datatype type;
-    uint64_t size;
-};
 
 ssize_t sentbytes;
 

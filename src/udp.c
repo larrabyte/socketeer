@@ -1,30 +1,16 @@
-#pragma once
+#include "head/compatlayer.h"
+#include "head/sockutils.h"
+#include "head/terminal.h"
+#include "head/sockets.h"
+#include "head/udp.h"
+#include <stdio.h>
 
-#include "posixcompat.h"
-#include "terminal.h"
-#include <inttypes.h>
-
-#define CASTVERSION 1
-
-struct castinfo {
-    char hostname[16];
-    uint16_t portno;
-    uint64_t version;
-};
-
-struct listnode {
-    struct castinfo remote;
-    struct listnode *next;
-};
-
-enum retcodes { ADDTOLIST, DONTADDTOLIST };
-
-struct listnode *sptr = NULL;  // Start pointer of the received casts list.
+struct listnode *head = NULL;  // Start pointer of the received casts list.
 
 // Checks recvdata against the cast list.
 int checkcastlist(struct castinfo recvdata) {
     if(recvdata.version != CASTVERSION) return DONTADDTOLIST;
-    struct listnode *local = sptr;
+    struct listnode *local = head;
     int addrsame, portsame;
 
     while(local->next != NULL) {
@@ -39,7 +25,7 @@ int checkcastlist(struct castinfo recvdata) {
 
 // Traverses and prints each member of the cast list.
 void printcastlist() {
-    struct listnode *local = sptr;
+    struct listnode *local = head;
     unsigned char counter = 0;
 
     clearterm();
@@ -54,7 +40,7 @@ void printcastlist() {
 // Adds recvdata to the list of received broadcasts.
 // Assumes that this is a brand new member.
 void addtolist(struct castinfo recvdata) {
-    struct listnode *local = sptr;
+    struct listnode *local = head;
 
     while(local->next != NULL) local = local->next;  // Traverse the linked list.
     memcpy(local, &recvdata, sizeof(recvdata));      // Copy recvdata into a new member.
@@ -96,8 +82,8 @@ void recvonudp(void *args) {
     struct castinfo data;
 
     // Initialising received broadcast list.
-    sptr = (struct listnode*) safealloc(NULL, sizeof(struct listnode));
-    memset(sptr, 0, sizeof(struct listnode));
+    head = (struct listnode*) safealloc(NULL, sizeof(struct listnode));
+    memset(head, 0, sizeof(struct listnode));
     printf("Awaiting broadcast...\n");
 
     while(1) {

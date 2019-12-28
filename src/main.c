@@ -1,6 +1,8 @@
-#include "headers/sockets.h"
-#include "headers/tcp.h"
-#include "headers/udp.h"
+#include "head/sockutils.h"
+#include "head/sockets.h"
+#include "head/tcp.h"
+#include "head/udp.h"
+#include <stdio.h>
 
 int main(int argc, char **argv) {
     #ifdef _WIN32

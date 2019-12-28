@@ -1,0 +1,48 @@
+# make.sh because i can't write a makefile
+# written by the larrabyte himself
+
+# COMPILERFLAGS="-Wall -Wextra -Wpedantic -Wno-format"
+COMPILERFLAGS="-static -O3 -flto -march=native"
+
+LIBRARIES="-lws2_32"
+EXECNAME="socketeer"
+OBJFILELIST=""
+
+set -e
+
+# Cleanup code
+for arg in "$@" ; do
+    if [ "$arg" == "clean" ] ; then
+        printf "Cleaning bin/*...\n"
+        rm bin/*
+        printf "Cleaning obj/*...\n"
+        rm obj/*
+        exit 0
+    fi
+done
+
+# stage 1: source -> object
+for file in src/* ; do
+
+    # if a directory, skip
+    if [ -d "$file" ] ; then
+        continue
+    fi
+
+    # grab name w/out extension
+    filebase=$(basename "$file")
+    filename="${filebase%.*}"
+
+    # compile and print
+    gcc ${COMPILERFLAGS} -c -o obj/${filename}.o ${file}
+    printf "Compiling %s...\n" "$file"
+done
+
+# stage 2: get all files in ./obj
+for file in obj/* ; do
+    OBJFILELIST="${OBJFILELIST}${file} "
+done
+
+# stage 3: link -> executable
+printf "Linking object files...\n"
+gcc ${COMPILERFLAGS} -o bin/${EXECNAME} ${OBJFILELIST} ${LIBRARIES}

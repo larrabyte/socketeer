@@ -1,11 +1,6 @@
-#pragma once
-
-#include "posixcompat.h"
-#include "sockutils.h"
+#include "head/sockutils.h"
+#include "head/sockets.h"
 #include <stdint.h>
-
-enum socktype { UNINITIALISED, TCPSERVER, TCPCLIENT, UDPRECVER, UDPCASTER };
-struct sockaddr_in serveraddr, clientaddr;
 
 // Returns a ready-to-use UDP socket based on socktype passed in.
 SOCKET udpsocketinit(int portno, enum socktype stype) {
@@ -79,4 +74,3 @@ SOCKET tcpsocketinit(const char *address, const char *portstr, enum socktype sty
 
     return sockfd;
 }
-

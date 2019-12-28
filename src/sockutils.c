@@ -1,12 +1,6 @@
-#pragma once
-
+#include "head/sockutils.h"
 #include <stdlib.h>
 #include <stdio.h>
-
-struct fileattr {
-    size_t size;
-    char *data;
-};
 
 // Prints message to standard error and exits with error.
 void exitsock(const char *message, int error) {
@@ -25,7 +19,7 @@ void *safealloc(void *memory, size_t size) {
 }
 
 // Returns a struct with file size and pointer to data.
-struct fileattr readfile(char *filepath) {
+struct fileattr readfile(const char *filepath) {
     FILE *fstream = fopen(filepath, "rb");
     if(fstream == NULL) return (struct fileattr) {0, NULL};
 
