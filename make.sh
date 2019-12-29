@@ -13,10 +13,8 @@ set -e
 # Cleanup code
 for arg in "$@" ; do
     if [ "$arg" == "clean" ] ; then
-        printf "Cleaning bin/*...\n"
-        rm bin/*
-        printf "Cleaning obj/*...\n"
-        rm obj/*
+        printf "Cleaning ./obj/ of object files...\n"
+        find ./obj -type f -name "*.o" -delete
         exit 0
     fi
 done
