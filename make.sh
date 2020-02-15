@@ -32,7 +32,7 @@ for file in src/* ; do
     filename="${filebase%.*}"
 
     # compile and print
-    gcc ${COMPILERFLAGS} -c -o obj/${filename}.o ${file}
+    ${COMPILER} ${COMPILERFLAGS} -c -o obj/${filename}.o ${file}
     printf "Compiling %s...\n" "$file"
 done
 
@@ -43,4 +43,4 @@ done
 
 # stage 3: link -> executable
 printf "Linking object files...\n"
-gcc ${COMPILERFLAGS} -o bin/${EXECNAME} ${OBJFILELIST} ${LIBRARIES}
+${COMPILER} ${COMPILERFLAGS} -o bin/${EXECNAME} ${OBJFILELIST} ${LIBRARIES}
