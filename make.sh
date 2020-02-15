@@ -1,8 +1,8 @@
 # make.sh because i can't write a makefile
 # written by the larrabyte himself
 
-# COMPILERFLAGS="-Wall -Wextra -Wpedantic -Wno-format"
-COMPILERFLAGS="-static -O3 -flto -march=native"
+COMPILERFLAGS="-static -O3 -flto -march=native" # "-Wall -Wextra -Wpedantic -Wno-format"
+COMPILER="x86_64-w64-mingw32-gcc" # gcc
 
 LIBRARIES="-lws2_32"
 EXECNAME="socketeer"
