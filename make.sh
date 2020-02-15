@@ -1,46 +1,66 @@
-# make.sh because i can't write a makefile
-# written by the larrabyte himself
+# templatemake.sh
+# made by the larrabyte himself
+# cant make a makefile
 
-COMPILERFLAGS="-static -O3 -flto -march=native" # "-Wall -Wextra -Wpedantic -Wno-format"
-COMPILER="x86_64-w64-mingw32-gcc" # gcc
+EXEC="socketeer"
 
-LIBRARIES="-lws2_32"
-EXECNAME="socketeer"
-OBJFILELIST=""
+# compilers, mingw64 and gnu/linux
+GNUCC="x86_64-pc-linux-gnu-gcc"
+WINCC="x86_64-w64-mingw32-gcc"
+TGTCC=""
 
+# mingw64 gcc flags
+WINCOMPILEFLAGS="-O3 -flto -march=native"
+WININCLUDEFLAGS=""
+WINLIBRARYFLAGS="-lws2_32"
+
+# gnu gcc flags
+GNUCOMPILEFLAGS="-O3 -flto -march=native"
+GNUINCLUDEFLAGS=""
+GNULIBRARYFLAGS=""
+
+# do not change these :)
+OBJLIST=""
+CFLAGS=""
+IFLAGS=""
+LFLAGS=""
 set -e
 
-# Cleanup code
-for arg in "$@" ; do
-    if [ "$arg" == "clean" ] ; then
-        printf "Cleaning ./obj/ of object files...\n"
-        find ./obj -type f -name "*.o" -delete
-        exit 0
-    fi
-done
+function stageone() {
+    for file in src/* ; do
+        if [ -d "$file" ] ; then
+            continue
+        fi
 
-# stage 1: source -> object
-for file in src/* ; do
+        fbase=$(basename "$file")
+        fname="${fbase%.*}"
 
-    # if a directory, skip
-    if [ -d "$file" ] ; then
-        continue
-    fi
+        ${TGTCC} ${CFLAGS} ${IFLAGS} -c ${file} -o obj/${fname}.o
+        printf "Compiling %s...\n" "$file"
+    done
+}
 
-    # grab name w/out extension
-    filebase=$(basename "$file")
-    filename="${filebase%.*}"
+function stagetwo() {
+    for file in obj/* ; do
+        OBJLIST="${OBJLIST}${file} "
+    done
 
-    # compile and print
-    ${COMPILER} ${COMPILERFLAGS} -c -o obj/${filename}.o ${file}
-    printf "Compiling %s...\n" "$file"
-done
+    printf "Linking object files...\n"
+    ${TGTCC} ${CFLAGS} ${OBJLIST} -o bin/${EXEC} ${LFLAGS}
+}
 
-# stage 2: get all files in ./obj
-for file in obj/* ; do
-    OBJFILELIST="${OBJFILELIST}${file} "
-done
+# argument parser
+if [ "$1" == "win" ] ; then
+    CFLAGS="${WINCOMPILEFLAGS}"
+    LFLAGS="${WINLIBRARYFLAGS}"
+    IFLAGS="${WININCLUDEFLAGS}"
+    TGTCC="${WINCC}"
+else
+    CFLAGS="${GNUCOMPILEFLAGS}"
+    LFLAGS="${GNULIBRARYFLAGS}"
+    IFLAGS="${GNUINCLUDEFLAGS}"
+    TGTCC="${GNUCC}"
+fi
 
-# stage 3: link -> executable
-printf "Linking object files...\n"
-${COMPILER} ${COMPILERFLAGS} -o bin/${EXECNAME} ${OBJFILELIST} ${LIBRARIES}
+stageone
+stagetwo
