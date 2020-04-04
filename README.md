@@ -1,9 +1,13 @@
-# socketeer
- Personal journey of learning how to code in C.
- This project should work on Windows, macOS and Linux.
+# Socketeer
+Socketeer is a program aimed at sending data across platforms, my first program written in C! It supports Windows, macOS and Linux.
 
- To compile Socketeer, run ```make.sh```. Make sure to have a peek inside first to adjust the compilation flags. 
- If on Windows, make sure LIBRARIES contains ```-lws2_32``` to link Winsock.
- Otherwise, it should be good if you just leave it empty.
 
- Make sure that you have a obj/ and bin/ folder, otherwise the script breaks :(
+## Prerequisites and Compilation
+Socketeer can be compiled on any platform using `clang` or `gcc`, modify the Makefile's compiler as you wish. To compile using the regular compiler:
+```
+make
+```
+To compile for Windows (assuming you have setup a cross-compiler already and modified the compiler in the Makefile):
+```
+make OS=win
+```
