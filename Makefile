@@ -1,53 +1,26 @@
-# ----------------------------------------------------
+# ------------------------------------------------------
 # Makefile for socketeer, made by the larrabyte himself.
-# ----------------------------------------------------
-.PHONY: default clean win 
-
-OS ?= linus
-
-# ----------------------------------
-# Assember, compiler and QEMU flags.
-# ----------------------------------
-
-ifeq ($(OS), linus)
-	CC := x86_64-pc-linux-gnu-gcc
-else
-	CC := x86_64-w64-mingw32-gcc
-endif
-
-WINFLAGS := -lws2_32
+# ------------------------------------------------------
 WARNINGS := -Wall -Wextra -Wpedantic
-CFLAGS   := $(WARNINGS) -O3 -flto -march=native
+INCLUDES := -Iinclude -I/opt/homebrew/Cellar/asio/1.18.1/include
+CFLAGS   := $(WARNINGS) $(INCLUDES) -std=c++11
+CC	     := c++
 
-# -----------------------------
-# Required directories & files.
-# -----------------------------
-HDRDIR := src/head
-SRCDIR := src
-OBJDIR := obj
+SRCDIR   := src
+OBJDIR   := obj
+SRCFILES := $(wildcard $(SRCDIR)/*.cpp)
+OBJFILES := $(SRCFILES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 
-SRCFILES := $(wildcard $(SRCDIR)/*.c)
-OBJFILES := $(SRCFILES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-
-# --------
-# Targets.
-# --------
-default: $(OS)
+all: $(OBJFILES)
+	@c++ $(CFLAGS) $(OBJFILES) -o bin/socketeer -lpthread
+	@printf "[linking] binary created.\n"
 
 clean:
-	@rm -f $(OBJDIR)/*.o
-	@printf "[wipe] Deleted object files from the object folder.\n"
-	@rm -f bin/socketeer && rm -f bin/socketeer.exe
-	@printf "[wipe] Deleted built executables.\n"
+	@rm -f $(OBJDIR)/*
+	@printf "[cleaner] removed object files.\n"
+	@rm -f bin/*
+	@printf "[cleaner] removed built binaries.\n"
 
-linus: $(OBJFILES)
-	@printf "[link] Linking object files and creating executable.\n"
-	@$(CC) $(CFLAGS) $(OBJFILES) -o bin/socketeer
-
-win: $(OBJFILES)
-	@printf "[link] Linking object files and creating Windows executable.\n"
-	@$(CC) $(CFLAGS) $(OBJFILES) -o bin/socketeer.exe $(WINFLAGS)
-
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
-	@printf "[gccc] $< compiled.\n"
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@$(CC) $(CFLAGS) -c $< -o $@
+	@printf "[cpp2obj] $< compiled.\n"

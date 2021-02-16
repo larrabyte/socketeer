@@ -2,6 +2,7 @@
 .stfolder/
 .vscode/
 .DS_Store
+bin/socketeer
 
 # Prerequisites
 *.d
