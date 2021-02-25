@@ -1,26 +1,28 @@
 # ------------------------------------------------------
 # Makefile for socketeer, made by the larrabyte himself.
 # ------------------------------------------------------
-WARNINGS := -Wall -Wextra -Wpedantic
-INCLUDES := -Iinclude -I/opt/homebrew/Cellar/asio/1.18.1/include
-CFLAGS   := $(WARNINGS) $(INCLUDES) -std=c++11
-CC	     := c++
+SRCFILES    := $(wildcard src/*.cpp)
+OBJFILES    := $(SRCFILES:src/%.cpp=obj/%.o)
+INCLUDES    := -Iinclude -I/opt/homebrew/include
+WARNINGS    := -Wall -Wextra -Wpedantic
+CFLAGS      := $(WARNINGS) $(INCLUDES) -std=c++11
+LFLAGS      := -lpthread
 
-SRCDIR   := src
-OBJDIR   := obj
-SRCFILES := $(wildcard $(SRCDIR)/*.cpp)
-OBJFILES := $(SRCFILES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+ifdef CROSS
+CFLAGS += -fPIE --target=x86_64-pc-linux-gnu --sysroot=/opt/x86_64-linux
+LFLAGS += -pie -fuse-ld=/opt/homebrew/Cellar/x86_64-elf-binutils/2.36.1/bin/x86_64-elf-ld
+endif
 
 all: $(OBJFILES)
-	@c++ $(CFLAGS) $(OBJFILES) -o bin/socketeer -lpthread
+	@$(CXX) $(CFLAGS) $(OBJFILES) -o bin/socketeer $(LFLAGS)
 	@printf "[linking] binary created.\n"
 
 clean:
-	@rm -f $(OBJDIR)/*
+	@rm -f obj/*
 	@printf "[cleaner] removed object files.\n"
 	@rm -f bin/*
 	@printf "[cleaner] removed built binaries.\n"
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+obj/%.o: src/%.cpp
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@printf "[cpp2obj] $< compiled.\n"
