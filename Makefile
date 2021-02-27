@@ -1,16 +1,16 @@
 # ------------------------------------------------------
 # Makefile for socketeer, made by the larrabyte himself.
 # ------------------------------------------------------
-SRCFILES    := $(wildcard src/*.cpp)
-OBJFILES    := $(SRCFILES:src/%.cpp=obj/%.o)
-INCLUDES    := -Iinclude -I/opt/homebrew/include
-WARNINGS    := -Wall -Wextra -Wpedantic
-CFLAGS      := $(WARNINGS) $(INCLUDES) -std=c++11
-LFLAGS      := -lpthread
+SRCFILES := $(wildcard src/*.cpp)
+OBJFILES := $(SRCFILES:src/%.cpp=obj/%.o)
+INCLUDES := -Iinclude -I/opt/homebrew/include
+WARNINGS := -Wall -Wextra -Wpedantic
+CFLAGS   := $(WARNINGS) $(INCLUDES) -std=c++11
+LFLAGS   := -lpthread
 
 ifdef CROSS
-CFLAGS += -fPIE --target=x86_64-pc-linux-gnu --sysroot=/opt/x86_64-linux
-LFLAGS += -pie -fuse-ld=/opt/homebrew/Cellar/x86_64-elf-binutils/2.36.1/bin/x86_64-elf-ld
+CFLAGS += -fPIE --target=x86_64-pc-linux-gnu --sysroot=/opt/sysroots/x86_64-linux
+LFLAGS += -pie -fuse-ld=/opt/homebrew/bin/x86_64-elf-ld
 endif
 
 all: $(OBJFILES)
